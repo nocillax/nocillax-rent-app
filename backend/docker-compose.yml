@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.4 # Change this if you need a different Postgres version
+    container_name: my-rent-db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rent_app
+    ports:
+      - '5432:5432' # Exposes DB to localhost
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persist data
+
+volumes:
+  pgdata:
