@@ -9,11 +9,14 @@ import {
   HttpStatus,
   HttpException,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import { Tenant } from '../entities/tenant.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('tenants')
+@UseGuards(JwtAuthGuard)
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
@@ -34,6 +37,24 @@ export class TenantsController {
       throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
     }
     return tenant;
+  }
+  
+  @Get(':id/bills')
+  async findBills(@Param('id') id: number): Promise<any[]> {
+    const tenant = await this.tenantsService.findOne(id);
+    if (!tenant) {
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    }
+    return this.tenantsService.findBills(id);
+  }
+  
+  @Get(':id/payments')
+  async findPayments(@Param('id') id: number): Promise<any[]> {
+    const tenant = await this.tenantsService.findOne(id);
+    if (!tenant) {
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    }
+    return this.tenantsService.findPayments(id);
   }
 
   @Post()

@@ -40,6 +40,32 @@ export class TenantsService {
       relations: ['apartment', 'bills', 'payments'],
     });
   }
+  
+  async findBills(id: number): Promise<any[]> {
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id },
+      relations: ['bills'],
+    });
+    
+    if (!tenant) {
+      return [];
+    }
+    
+    return tenant.bills;
+  }
+  
+  async findPayments(id: number): Promise<any[]> {
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id },
+      relations: ['payments'],
+    });
+    
+    if (!tenant) {
+      return [];
+    }
+    
+    return tenant.payments;
+  }
 
   async create(tenant: Tenant): Promise<Tenant> {
     // Validate that the apartment exists

@@ -6,6 +6,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Tenant } from './tenant.entity';
+import { Apartment } from './apartment.entity';
 
 @Entity('bills')
 export class Bill {
@@ -62,4 +63,13 @@ export class Bill {
 
   @Column()
   tenant_id: number;
+  
+  // ManyToOne relationship with Apartment
+  // This provides a direct relationship to Apartment
+  @ManyToOne(() => Apartment)
+  @JoinColumn({ name: 'apartment_id' })
+  apartment: Apartment;
+  
+  @Column()
+  apartment_id: number;
 }

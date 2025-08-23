@@ -7,6 +7,7 @@ import { TenantsModule } from './tenants/tenants.module';
 import { BillsModule } from './bills/bills.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ReportsModule } from './reports/reports.module';
+import { AuthModule } from './auth/auth.module';
 import { Apartment } from './entities/apartment.entity';
 import { Tenant } from './entities/tenant.entity';
 import { Bill } from './entities/bill.entity';
@@ -29,6 +30,7 @@ import { Payment } from './entities/payment.entity';
     BillsModule,
     PaymentsModule,
     ReportsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

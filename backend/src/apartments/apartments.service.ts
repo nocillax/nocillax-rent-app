@@ -2,12 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Apartment } from '../entities/apartment.entity';
+import { Bill } from '../entities/bill.entity';
+import { Tenant } from '../entities/tenant.entity';
 
 @Injectable()
 export class ApartmentsService {
   constructor(
     @InjectRepository(Apartment)
     private apartmentsRepository: Repository<Apartment>,
+    @InjectRepository(Bill)
+    private billsRepository: Repository<Bill>,
+    @InjectRepository(Tenant)
+    private tenantsRepository: Repository<Tenant>,
   ) {}
 
   findAll(): Promise<Apartment[]> {
@@ -21,6 +27,21 @@ export class ApartmentsService {
     return this.apartmentsRepository.findOne({
       where: { id },
       relations: ['tenants'],
+    });
+  }
+  
+  async findBillsForApartment(id: number): Promise<Bill[]> {
+    return this.billsRepository.find({
+      where: { apartment_id: id },
+      relations: ['tenant'],
+      order: { year: 'DESC', month: 'DESC' },
+    });
+  }
+  
+  async findTenantsForApartment(id: number): Promise<Tenant[]> {
+    return this.tenantsRepository.find({
+      where: { apartment_id: id, is_active: true },
+      order: { name: 'ASC' },
     });
   }
 
