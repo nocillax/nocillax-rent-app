@@ -4,9 +4,11 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Tenant } from './tenant.entity';
 import { Apartment } from './apartment.entity';
+import { OtherCharge } from './other-charge.entity';
 
 @Entity('bills')
 export class Bill {
@@ -18,6 +20,15 @@ export class Bill {
 
   @Column({ type: 'int' })
   year: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  previous_balance: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  advance_payment: number;
+
+  @Column({ type: 'date', nullable: true })
+  due_date: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   rent: number;
@@ -36,6 +47,9 @@ export class Bill {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   service_charge: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  trash_bill: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   other_charges: number;
@@ -63,13 +77,19 @@ export class Bill {
 
   @Column()
   tenant_id: number;
-  
+
   // ManyToOne relationship with Apartment
   // This provides a direct relationship to Apartment
   @ManyToOne(() => Apartment)
   @JoinColumn({ name: 'apartment_id' })
   apartment: Apartment;
-  
+
   @Column()
   apartment_id: number;
+
+  // OneToMany relationship with OtherCharge
+  @OneToMany(() => OtherCharge, (otherCharge) => otherCharge.bill, {
+    cascade: true,
+  })
+  other_charge_items: OtherCharge[];
 }

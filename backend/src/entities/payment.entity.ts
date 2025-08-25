@@ -27,6 +27,9 @@ export class Payment {
   @Column({ length: 100, nullable: true })
   reference_number: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  remaining_balance: number;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

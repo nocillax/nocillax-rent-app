@@ -17,6 +17,7 @@ import { Payment } from '../entities/payment.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePaymentDto } from '../dto/payment/create-payment.dto';
 import { UpdatePaymentDto } from '../dto/payment/update-payment.dto';
+import { PaymentHistoryDto } from '../dto/payment/payment-history.dto';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard)
@@ -51,6 +52,13 @@ export class PaymentsController {
     const total =
       await this.paymentsService.getTotalPaymentsByTenantId(tenantId);
     return { total };
+  }
+
+  @Get('tenant/:tenantId/history')
+  async getTenantPaymentHistory(
+    @Param('tenantId', ParseIntPipe) tenantId: number,
+  ): Promise<PaymentHistoryDto[]> {
+    return this.paymentsService.getTenantPaymentHistory(tenantId);
   }
 
   @Get('summary/monthly')

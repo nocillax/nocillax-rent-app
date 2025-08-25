@@ -20,6 +20,18 @@ export class CreateBillDto {
 
   @IsNumber()
   @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  previous_balance: number = 0;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  advance_payment: number = 0;
+
+  @IsNumber()
+  @Min(0)
   @Type(() => Number)
   rent: number;
 
@@ -39,13 +51,19 @@ export class CreateBillDto {
   @Min(0)
   @IsOptional()
   @Type(() => Number)
-  electricity_bill: number = 0;
+  electricity_bill: number = 0; // no need
 
   @IsNumber()
   @Min(0)
   @IsOptional()
   @Type(() => Number)
   internet_bill: number = 0;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  trash_bill: number = 0;
 
   @IsNumber()
   @Min(0)

@@ -35,5 +35,29 @@ export class CreateTenantDto {
   is_active?: boolean = true;
 
   @IsNumber()
+  @IsOptional()
+  advance_payment?: number = 0;
+
+  @IsBoolean()
+  @IsOptional()
+  water_bill_enabled?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  gas_bill_enabled?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  electricity_bill_enabled?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  internet_bill_enabled?: boolean = true;
+
+  @IsBoolean()
+  @IsOptional()
+  service_charge_enabled?: boolean = true;
+
+  @IsNumber()
   apartment_id: number;
 }

@@ -5,6 +5,7 @@ import { Tenant } from '../entities/tenant.entity';
 import { ApartmentsService } from '../apartments/apartments.service';
 import { CreateTenantDto } from '../dto/tenant/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/tenant/update-tenant.dto';
+import { TenantBillPreferencesDto } from '../dto/tenant/bill-preferences.dto';
 
 @Injectable()
 export class TenantsService {
@@ -104,6 +105,19 @@ export class TenantsService {
 
   async archive(id: number): Promise<Tenant | null> {
     await this.tenantsRepository.update(id, { is_active: false });
+    return this.findOne(id);
+  }
+
+  async updateBillPreferences(
+    id: number,
+    billPreferencesDto: TenantBillPreferencesDto,
+  ): Promise<Tenant | null> {
+    const tenant = await this.findOne(id);
+    if (!tenant) {
+      return null;
+    }
+
+    await this.tenantsRepository.update(id, billPreferencesDto);
     return this.findOne(id);
   }
 

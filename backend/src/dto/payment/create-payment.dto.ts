@@ -34,5 +34,11 @@ export class CreatePaymentDto {
   reference_number?: string;
 
   @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Type(() => Number)
+  remaining_balance?: number;
+
+  @IsNumber()
   tenant_id: number;
 }

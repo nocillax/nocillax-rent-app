@@ -48,10 +48,9 @@ export class PaymentsService {
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
     // Validate tenant exists
+    let tenant;
     if (createPaymentDto.tenant_id) {
-      const tenant = await this.tenantsService.findOne(
-        createPaymentDto.tenant_id,
-      );
+      tenant = await this.tenantsService.findOne(createPaymentDto.tenant_id);
       if (!tenant) {
         throw new Error('Tenant not found');
       }
@@ -64,7 +63,50 @@ export class PaymentsService {
     if (createPaymentDto.date) {
       payment.date = new Date(createPaymentDto.date);
     }
-    return this.paymentsRepository.save(payment);
+
+    // Calculate and set the remaining balance
+    const remainingBalance = await this.calculateRemainingBalance(
+      tenant,
+      payment.amount,
+    );
+    payment.remaining_balance = remainingBalance;
+
+    // Save the payment
+    const savedPayment = await this.paymentsRepository.save(payment);
+
+    // Check for advance payment by calculating the tenant's total bills vs. total payments
+    await this.processAdvancePayment(tenant);
+
+    return savedPayment;
+  }
+
+  /**
+   * Process advance payment calculation for a tenant
+   * This calculates if the tenant has paid more than their bills total
+   * and stores the excess as advance payment
+   */
+  private async processAdvancePayment(tenant: any): Promise<void> {
+    if (!tenant) return;
+
+    // Get all bills for this tenant
+    const bills = tenant.bills || [];
+    const totalBillAmount = bills.reduce(
+      (sum, bill) => sum + Number(bill.total),
+      0,
+    );
+
+    // Get total payments
+    const totalPayments = await this.getTotalPaymentsByTenantId(tenant.id);
+
+    // Calculate advance (overpaid amount)
+    const advanceAmount = Math.max(0, totalPayments - totalBillAmount);
+
+    if (advanceAmount > 0) {
+      // Update tenant with advance payment
+      await this.tenantsService.update(tenant.id, {
+        advance_payment: advanceAmount,
+      });
+    }
   }
 
   async update(
@@ -138,5 +180,51 @@ export class PaymentsService {
       .getRawMany();
 
     return result;
+  }
+
+  /**
+   * Get payment history with remaining balance for a tenant
+   * Shows a history of all payments and the remaining balance after each payment
+   */
+  async getTenantPaymentHistory(tenantId: number): Promise<any[]> {
+    // Get all payments for the tenant ordered by date
+    const payments = await this.paymentsRepository.find({
+      where: { tenant_id: tenantId },
+      order: { date: 'ASC' },
+    });
+
+    // Format the payments with balance info
+    return payments.map((payment) => ({
+      payment_id: payment.id,
+      date: payment.date,
+      amount: payment.amount,
+      remaining_balance: payment.remaining_balance || 0,
+      payment_method: payment.payment_method,
+      reference_number: payment.reference_number,
+    }));
+  }
+
+  /**
+   * Calculate the remaining balance after a payment is made
+   * This calculates the total outstanding amount minus the payment amount
+   */
+  private async calculateRemainingBalance(
+    tenant: any,
+    paymentAmount: number,
+  ): Promise<number> {
+    if (!tenant) return 0;
+
+    // Get all bills for this tenant
+    const bills = tenant.bills || [];
+
+    // Calculate total outstanding amount from unpaid bills
+    const totalOutstanding = bills
+      .filter((bill) => !bill.is_paid)
+      .reduce((sum, bill) => sum + Number(bill.total), 0);
+
+    // Calculate remaining balance after this payment
+    const remainingBalance = Math.max(0, totalOutstanding - paymentAmount);
+
+    return remainingBalance;
   }
 }

@@ -33,6 +33,27 @@ export class Tenant {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  advance_payment: number;
+
+  @Column({ type: 'boolean', default: true })
+  water_bill_enabled: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  gas_bill_enabled: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  electricity_bill_enabled: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  internet_bill_enabled: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  service_charge_enabled: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  trash_bill_enabled: boolean;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

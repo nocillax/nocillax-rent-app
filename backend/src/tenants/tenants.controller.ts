@@ -17,6 +17,7 @@ import { Tenant } from '../entities/tenant.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateTenantDto } from '../dto/tenant/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/tenant/update-tenant.dto';
+import { TenantBillPreferencesDto } from '../dto/tenant/bill-preferences.dto';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard)
@@ -87,6 +88,21 @@ export class TenantsController {
       throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
     }
     return archived;
+  }
+
+  @Patch(':id/bill-preferences')
+  async updateBillPreferences(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() billPreferencesDto: TenantBillPreferencesDto,
+  ): Promise<Tenant> {
+    const updated = await this.tenantsService.updateBillPreferences(
+      id,
+      billPreferencesDto,
+    );
+    if (!updated) {
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    }
+    return updated;
   }
 
   @Delete(':id')
