@@ -7,7 +7,16 @@ import {
   TenantPaymentStatusDto,
   YearlySummaryDto,
 } from '../dto/dashboard/dashboard.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
+@ApiTags('Dashboard')
+@ApiBearerAuth('JWT-auth')
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
@@ -16,6 +25,26 @@ export class DashboardController {
     private readonly paymentsService: PaymentsService,
   ) {}
 
+  @ApiOperation({ summary: 'Get financial summary for a specific month' })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns financial summary including collection rates and tenant payment statuses',
+    type: FinancialSummaryDto,
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    description: 'Year for the financial summary (defaults to current year)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'month',
+    required: false,
+    description:
+      'Month for the financial summary (1-12, defaults to current month)',
+    type: Number,
+  })
   @Get('financial-summary')
   async getFinancialSummary(
     @Query('year') year: number = new Date().getFullYear(),
@@ -58,6 +87,27 @@ export class DashboardController {
     };
   }
 
+  @ApiOperation({
+    summary: 'Get payment status for all tenants in a specific month',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns payment status for each tenant (paid, partial, or due)',
+    type: [TenantPaymentStatusDto],
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    description: 'Year for tenant statuses (defaults to current year)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'month',
+    required: false,
+    description: 'Month for tenant statuses (1-12, defaults to current month)',
+    type: Number,
+  })
   @Get('tenant-statuses')
   async getTenantStatuses(
     @Query('year') year: number = new Date().getFullYear(),
@@ -125,6 +175,20 @@ export class DashboardController {
     return statuses;
   }
 
+  @ApiOperation({
+    summary: 'Get yearly financial summary with month-by-month breakdown',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns yearly financial data with monthly breakdowns',
+    type: YearlySummaryDto,
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    description: 'Year for the summary (defaults to current year)',
+    type: Number,
+  })
   @Get('yearly-summary')
   async getYearlySummary(
     @Query('year') year: number = new Date().getFullYear(),

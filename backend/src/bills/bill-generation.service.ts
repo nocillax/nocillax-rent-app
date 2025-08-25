@@ -18,7 +18,12 @@ export class BillGenerationService {
 
   /**
    * Runs on the first day of each month at 00:01 AM
-   * Generates bills for all active tenants
+   * Generates bills for all active tenants.
+   *
+   * The system follows a "running month" billing model:
+   * - Bills are created at the beginning of the month (e.g., Jan 1 for January)
+   * - Tenants pay for the full month regardless of move-in/move-out date
+   * - If a tenant leaves mid-month, they are still responsible for the full month's bill
    */
   @Cron('1 0 1 * *') // Run at 00:01 on the 1st day of every month
   async generateMonthlyBills() {
@@ -51,6 +56,11 @@ export class BillGenerationService {
 
   /**
    * Generate a bill for a specific tenant for a given month/year
+   *
+   * Bills are always generated for the full month following the running month model:
+   * - Bills are created at the beginning of the month
+   * - Full month charges apply regardless of move-in or move-out date
+   * - No proration is applied for partial month occupancy
    */
   async generateBillForTenant(
     tenant: Tenant,

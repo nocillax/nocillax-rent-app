@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,8 +25,32 @@ async function bootstrap() {
   // Parse cookies in incoming requests
   app.use(cookieParser());
 
+  // Set up Swagger documentation
+  const config = new DocumentBuilder()
+    .setTitle('Rent App API')
+    .setDescription('API documentation for the Rent Management Application')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'bearer', // Using the default name to match @ApiBearerAuth() without arguments
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
+  console.log(
+    `Swagger documentation available at: http://localhost:${port}/api-docs`,
+  );
 }
 bootstrap();

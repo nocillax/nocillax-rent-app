@@ -8,11 +8,21 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../dto/auth/login.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({
+    summary: 'User login',
+    description:
+      'Authenticates a user and returns a JWT token in an HTTP-only cookie',
+  })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
@@ -38,6 +48,11 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({
+    summary: 'User logout',
+    description: 'Clears the authentication cookie',
+  })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
     // Clear the JWT cookie
