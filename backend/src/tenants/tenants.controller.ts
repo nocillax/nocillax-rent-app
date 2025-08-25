@@ -10,10 +10,13 @@ import {
   HttpException,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import { Tenant } from '../entities/tenant.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateTenantDto } from '../dto/tenant/create-tenant.dto';
+import { UpdateTenantDto } from '../dto/tenant/update-tenant.dto';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard)
@@ -21,7 +24,10 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Get()
-  findAll(@Query('apartmentId') apartmentId?: number): Promise<Tenant[]> {
+  findAll(
+    @Query('apartmentId', new ParseIntPipe({ optional: true }))
+    apartmentId?: number,
+  ): Promise<Tenant[]> {
     return this.tenantsService.findAll(apartmentId);
   }
 
@@ -31,14 +37,14 @@ export class TenantsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Tenant> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Tenant> {
     const tenant = await this.tenantsService.findOne(id);
     if (!tenant) {
       throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
     }
     return tenant;
   }
-  
+
   @Get(':id/bills')
   async findBills(@Param('id') id: number): Promise<any[]> {
     const tenant = await this.tenantsService.findOne(id);
@@ -47,7 +53,7 @@ export class TenantsController {
     }
     return this.tenantsService.findBills(id);
   }
-  
+
   @Get(':id/payments')
   async findPayments(@Param('id') id: number): Promise<any[]> {
     const tenant = await this.tenantsService.findOne(id);
@@ -58,16 +64,16 @@ export class TenantsController {
   }
 
   @Post()
-  create(@Body() tenant: Tenant): Promise<Tenant> {
-    return this.tenantsService.create(tenant);
+  create(@Body() createTenantDto: CreateTenantDto): Promise<Tenant> {
+    return this.tenantsService.create(createTenantDto);
   }
 
   @Patch(':id')
   async update(
-    @Param('id') id: number,
-    @Body() tenant: Partial<Tenant>,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTenantDto: UpdateTenantDto,
   ): Promise<Tenant> {
-    const updated = await this.tenantsService.update(id, tenant);
+    const updated = await this.tenantsService.update(id, updateTenantDto);
     if (!updated) {
       throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
     }

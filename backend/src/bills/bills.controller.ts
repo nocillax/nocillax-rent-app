@@ -1,8 +1,25 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, HttpStatus, HttpException, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  HttpStatus,
+  HttpException,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { BillsService } from './bills.service';
 import { Bill } from '../entities/bill.entity';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateBillDto } from '../dto/bill/create-bill.dto';
+import { UpdateBillDto } from '../dto/bill/update-bill.dto';
 
 @Controller('bills')
+@UseGuards(JwtAuthGuard)
 export class BillsController {
   constructor(private readonly billsService: BillsService) {}
 
@@ -16,7 +33,7 @@ export class BillsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Bill> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Bill> {
     const bill = await this.billsService.findOne(id);
     if (!bill) {
       throw new HttpException('Bill not found', HttpStatus.NOT_FOUND);
@@ -25,13 +42,16 @@ export class BillsController {
   }
 
   @Post()
-  create(@Body() bill: Bill): Promise<Bill> {
-    return this.billsService.create(bill);
+  create(@Body() createBillDto: CreateBillDto): Promise<Bill> {
+    return this.billsService.create(createBillDto);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: number, @Body() bill: Partial<Bill>): Promise<Bill> {
-    const updated = await this.billsService.update(id, bill);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBillDto: UpdateBillDto,
+  ): Promise<Bill> {
+    const updated = await this.billsService.update(id, updateBillDto);
     if (!updated) {
       throw new HttpException('Bill not found', HttpStatus.NOT_FOUND);
     }
@@ -39,7 +59,7 @@ export class BillsController {
   }
 
   @Post(':id/paid')
-  async markAsPaid(@Param('id') id: number): Promise<Bill> {
+  async markAsPaid(@Param('id', ParseIntPipe) id: number): Promise<Bill> {
     const updated = await this.billsService.markAsPaid(id);
     if (!updated) {
       throw new HttpException('Bill not found', HttpStatus.NOT_FOUND);
@@ -48,7 +68,7 @@ export class BillsController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     const result = await this.billsService.remove(id);
     if (!result) {
       throw new HttpException('Bill not found', HttpStatus.NOT_FOUND);

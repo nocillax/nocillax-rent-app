@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Apartment } from '../entities/apartment.entity';
 import { Bill } from '../entities/bill.entity';
 import { Tenant } from '../entities/tenant.entity';
+import { CreateApartmentDto } from '../dto/apartment/create-apartment.dto';
+import { UpdateApartmentDto } from '../dto/apartment/update-apartment.dto';
 
 @Injectable()
 export class ApartmentsService {
@@ -29,7 +31,7 @@ export class ApartmentsService {
       relations: ['tenants'],
     });
   }
-  
+
   async findBillsForApartment(id: number): Promise<Bill[]> {
     return this.billsRepository.find({
       where: { apartment_id: id },
@@ -37,7 +39,7 @@ export class ApartmentsService {
       order: { year: 'DESC', month: 'DESC' },
     });
   }
-  
+
   async findTenantsForApartment(id: number): Promise<Tenant[]> {
     return this.tenantsRepository.find({
       where: { apartment_id: id, is_active: true },
@@ -45,12 +47,16 @@ export class ApartmentsService {
     });
   }
 
-  async create(apartment: Apartment): Promise<Apartment> {
+  async create(createApartmentDto: CreateApartmentDto): Promise<Apartment> {
+    const apartment = this.apartmentsRepository.create(createApartmentDto);
     return this.apartmentsRepository.save(apartment);
   }
 
-  async update(id: number, apartment: Apartment): Promise<Apartment | null> {
-    await this.apartmentsRepository.update(id, apartment);
+  async update(
+    id: number,
+    updateApartmentDto: UpdateApartmentDto,
+  ): Promise<Apartment | null> {
+    await this.apartmentsRepository.update(id, updateApartmentDto);
     return this.findOne(id);
   }
 

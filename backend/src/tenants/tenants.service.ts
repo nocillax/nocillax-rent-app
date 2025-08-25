@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
 import { ApartmentsService } from '../apartments/apartments.service';
+import { CreateTenantDto } from '../dto/tenant/create-tenant.dto';
+import { UpdateTenantDto } from '../dto/tenant/update-tenant.dto';
 
 @Injectable()
 export class TenantsService {
@@ -40,55 +42,63 @@ export class TenantsService {
       relations: ['apartment', 'bills', 'payments'],
     });
   }
-  
+
   async findBills(id: number): Promise<any[]> {
     const tenant = await this.tenantsRepository.findOne({
       where: { id },
       relations: ['bills'],
     });
-    
+
     if (!tenant) {
       return [];
     }
-    
+
     return tenant.bills;
   }
-  
+
   async findPayments(id: number): Promise<any[]> {
     const tenant = await this.tenantsRepository.findOne({
       where: { id },
       relations: ['payments'],
     });
-    
+
     if (!tenant) {
       return [];
     }
-    
+
     return tenant.payments;
   }
 
-  async create(tenant: Tenant): Promise<Tenant> {
+  async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
     // Validate that the apartment exists
-    if (tenant.apartment_id) {
-      const apartment = await this.apartmentsService.findOne(tenant.apartment_id);
+    if (createTenantDto.apartment_id) {
+      const apartment = await this.apartmentsService.findOne(
+        createTenantDto.apartment_id,
+      );
       if (!apartment) {
         throw new Error('Apartment not found');
       }
     }
-    
+
+    const tenant = this.tenantsRepository.create(createTenantDto);
     return this.tenantsRepository.save(tenant);
   }
 
-  async update(id: number, tenant: Partial<Tenant>): Promise<Tenant | null> {
+  async update(
+    id: number,
+    updateTenantDto: UpdateTenantDto,
+  ): Promise<Tenant | null> {
     // Validate that the apartment exists if it's being updated
-    if (tenant.apartment_id) {
-      const apartment = await this.apartmentsService.findOne(tenant.apartment_id);
+    if (updateTenantDto.apartment_id) {
+      const apartment = await this.apartmentsService.findOne(
+        updateTenantDto.apartment_id,
+      );
       if (!apartment) {
         throw new Error('Apartment not found');
       }
     }
-    
-    await this.tenantsRepository.update(id, tenant);
+
+    await this.tenantsRepository.update(id, updateTenantDto);
     return this.findOne(id);
   }
 
@@ -99,6 +109,10 @@ export class TenantsService {
 
   async remove(id: number): Promise<boolean> {
     const result = await this.tenantsRepository.delete(id);
-    return result.affected !== null && result.affected !== undefined && result.affected > 0;
+    return (
+      result.affected !== null &&
+      result.affected !== undefined &&
+      result.affected > 0
+    );
   }
 }

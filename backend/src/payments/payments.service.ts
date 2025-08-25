@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Payment } from '../entities/payment.entity';
 import { TenantsService } from '../tenants/tenants.service';
+import { CreatePaymentDto } from '../dto/payment/create-payment.dto';
+import { UpdatePaymentDto } from '../dto/payment/update-payment.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -44,34 +46,68 @@ export class PaymentsService {
     });
   }
 
-  async create(payment: Payment): Promise<Payment> {
+  async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
     // Validate tenant exists
-    if (payment.tenant_id) {
-      const tenant = await this.tenantsService.findOne(payment.tenant_id);
+    if (createPaymentDto.tenant_id) {
+      const tenant = await this.tenantsService.findOne(
+        createPaymentDto.tenant_id,
+      );
       if (!tenant) {
         throw new Error('Tenant not found');
       }
     }
-    
+
+    // Create the payment with DTO data
+    const payment = this.paymentsRepository.create(createPaymentDto);
+
+    // Set the date if provided, otherwise it will use current date
+    if (createPaymentDto.date) {
+      payment.date = new Date(createPaymentDto.date);
+    }
     return this.paymentsRepository.save(payment);
   }
 
-  async update(id: number, payment: Partial<Payment>): Promise<Payment | null> {
+  async update(
+    id: number,
+    updatePaymentDto: UpdatePaymentDto,
+  ): Promise<Payment | null> {
     // If tenant_id is changing, validate the new tenant exists
-    if (payment.tenant_id) {
-      const tenant = await this.tenantsService.findOne(payment.tenant_id);
+    if (updatePaymentDto.tenant_id) {
+      const tenant = await this.tenantsService.findOne(
+        updatePaymentDto.tenant_id,
+      );
       if (!tenant) {
         throw new Error('Tenant not found');
       }
     }
-    
-    await this.paymentsRepository.update(id, payment);
+
+    // Get existing payment to update
+    const existingPayment = await this.findOne(id);
+    if (!existingPayment) {
+      return null;
+    }
+
+    // Create update data object starting with the DTO fields
+    const updateData: any = { ...updatePaymentDto };
+
+    // Special handling for date - convert string to Date object
+    if (updatePaymentDto.date) {
+      // Use 'any' type for updateData to bypass TypeScript's type checking
+      // This is necessary because the entity expects a Date but the DTO has a string
+      updateData.date = new Date(updatePaymentDto.date);
+    }
+
+    await this.paymentsRepository.update(id, updateData);
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<boolean> {
     const result = await this.paymentsRepository.delete(id);
-    return result.affected !== null && result.affected !== undefined && result.affected > 0;
+    return (
+      result.affected !== null &&
+      result.affected !== undefined &&
+      result.affected > 0
+    );
   }
 
   async getTotalPaymentsByTenantId(tenantId: number): Promise<number> {
@@ -80,7 +116,7 @@ export class PaymentsService {
       .select('SUM(payment.amount)', 'total')
       .where('payment.tenant_id = :tenantId', { tenantId })
       .getRawOne();
-    
+
     return result.total ? parseFloat(result.total) : 0;
   }
 

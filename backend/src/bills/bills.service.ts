@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bill } from '../entities/bill.entity';
 import { TenantsService } from '../tenants/tenants.service';
+import { CreateBillDto } from '../dto/bill/create-bill.dto';
+import { UpdateBillDto } from '../dto/bill/update-bill.dto';
 
 @Injectable()
 export class BillsService {
@@ -12,7 +14,11 @@ export class BillsService {
     private tenantsService: TenantsService,
   ) {}
 
-  async findAll(tenantId?: number, year?: number, month?: number): Promise<Bill[]> {
+  async findAll(
+    tenantId?: number,
+    year?: number,
+    month?: number,
+  ): Promise<Bill[]> {
     const query: any = {
       relations: ['tenant'],
       order: { year: 'DESC', month: 'DESC' },
@@ -42,42 +48,47 @@ export class BillsService {
     });
   }
 
-  async create(bill: Bill): Promise<Bill> {
+  async create(createBillDto: CreateBillDto): Promise<Bill> {
     // Validate tenant exists
-    if (bill.tenant_id) {
-      const tenant = await this.tenantsService.findOne(bill.tenant_id);
+    if (createBillDto.tenant_id) {
+      const tenant = await this.tenantsService.findOne(createBillDto.tenant_id);
       if (!tenant) {
         throw new Error('Tenant not found');
       }
     }
-    
+
+    const bill = this.billsRepository.create(createBillDto);
+
     // Calculate total
     bill.total = this.calculateTotal(bill);
-    
+
     return this.billsRepository.save(bill);
   }
 
-  async update(id: number, bill: Partial<Bill>): Promise<Bill | null> {
+  async update(id: number, updateBillDto: UpdateBillDto): Promise<Bill | null> {
     const existingBill = await this.findOne(id);
     if (!existingBill) {
       return null;
     }
 
     // If tenant_id is changing, validate the new tenant exists
-    if (bill.tenant_id && bill.tenant_id !== existingBill.tenant_id) {
-      const tenant = await this.tenantsService.findOne(bill.tenant_id);
+    if (
+      updateBillDto.tenant_id &&
+      updateBillDto.tenant_id !== existingBill.tenant_id
+    ) {
+      const tenant = await this.tenantsService.findOne(updateBillDto.tenant_id);
       if (!tenant) {
         throw new Error('Tenant not found');
       }
     }
 
     // Calculate total if any bill components are being updated
-    if (this.isBillAmountUpdated(bill)) {
-      const updatedBill = { ...existingBill, ...bill };
-      bill.total = this.calculateTotal(updatedBill);
+    if (this.isBillAmountUpdated(updateBillDto)) {
+      const updatedBill = { ...existingBill, ...updateBillDto };
+      updateBillDto['total'] = this.calculateTotal(updatedBill);
     }
-    
-    await this.billsRepository.update(id, bill);
+
+    await this.billsRepository.update(id, updateBillDto);
     return this.findOne(id);
   }
 
@@ -88,10 +99,14 @@ export class BillsService {
 
   async remove(id: number): Promise<boolean> {
     const result = await this.billsRepository.delete(id);
-    return result.affected !== null && result.affected !== undefined && result.affected > 0;
+    return (
+      result.affected !== null &&
+      result.affected !== undefined &&
+      result.affected > 0
+    );
   }
 
-  private calculateTotal(bill: Bill): number {
+  private calculateTotal(bill: Bill | CreateBillDto | any): number {
     return (
       (bill.rent || 0) +
       (bill.water_bill || 0) +
@@ -103,7 +118,7 @@ export class BillsService {
     );
   }
 
-  private isBillAmountUpdated(bill: Partial<Bill>): boolean {
+  private isBillAmountUpdated(bill: Partial<Bill> | UpdateBillDto): boolean {
     return (
       bill.rent !== undefined ||
       bill.water_bill !== undefined ||
