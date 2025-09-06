@@ -4,11 +4,13 @@ import { Repository } from 'typeorm';
 import { BillGenerationService } from './bill-generation.service';
 import { Bill } from '../entities/bill.entity';
 import { Tenant } from '../entities/tenant.entity';
+import { Logger } from '@nestjs/common';
 
 describe('BillGenerationService', () => {
   let service: BillGenerationService;
   let billRepository: Repository<Bill>;
   let tenantRepository: Repository<Tenant>;
+  let loggerSpy: jest.SpyInstance;
 
   const mockBillRepository = {
     findOne: jest.fn(),
@@ -41,6 +43,16 @@ describe('BillGenerationService', () => {
     tenantRepository = module.get<Repository<Tenant>>(
       getRepositoryToken(Tenant),
     );
+
+    // Mock the logger methods
+    loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    // Ensure calculateTotal returns a proper value by default
+    jest.spyOn(service as any, 'calculateTotal').mockImplementation((bill: any) => {
+      // Simple default implementation that adds rent and subtracts advance payment
+      return (bill.rent || 0) - (bill.advance_payment || 0);
+    });
   });
 
   afterEach(() => {
@@ -51,10 +63,76 @@ describe('BillGenerationService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('generateMonthlyBills', () => {
+    it('should generate bills for all active tenants', async () => {
+      // Mock the current date to ensure consistent testing
+      const mockDate = new Date('2025-01-01T00:01:00Z'); // January 1st at 00:01
+      const originalDate = global.Date;
+      global.Date = jest.fn(() => mockDate) as any;
+      global.Date.now = originalDate.now;
+
+      // Setup mocks for active tenants
+      const tenants = [
+        {
+          id: 1,
+          name: 'John Doe',
+          apartment_id: 101,
+          apartment: { id: 101, base_rent: 1000 },
+          is_active: true,
+        },
+        {
+          id: 2,
+          name: 'Jane Smith',
+          apartment_id: 102,
+          apartment: { id: 102, base_rent: 1200 },
+          is_active: true,
+        },
+      ] as Tenant[];
+
+      mockTenantRepository.find.mockResolvedValue(tenants);
+
+      // Mock implementation of generateBillForTenant
+      const generateBillSpy = jest.spyOn(service, 'generateBillForTenant').mockResolvedValue({
+        id: 1,
+      } as Bill);
+
+      // Execute the monthly bill generation
+      await service.generateMonthlyBills();
+
+      // Verify the correct tenants were processed
+      expect(mockTenantRepository.find).toHaveBeenCalledWith({
+        where: { is_active: true },
+        relations: ['apartment'],
+      });
+
+      // Should call generateBillForTenant for each tenant
+      expect(generateBillSpy).toHaveBeenCalledTimes(2);
+      expect(generateBillSpy).toHaveBeenCalledWith(
+        tenants[0],
+        mockDate.getFullYear(),
+        mockDate.getMonth() + 1, // JS months are 0-indexed
+        expect.any(Date),
+      );
+      expect(generateBillSpy).toHaveBeenCalledWith(
+        tenants[1],
+        mockDate.getFullYear(),
+        mockDate.getMonth() + 1,
+        expect.any(Date),
+      );
+
+      // Verify logging
+      expect(loggerSpy).toHaveBeenCalledWith('Running monthly bill generation...');
+      expect(loggerSpy).toHaveBeenCalledWith(`Found ${tenants.length} active tenants to generate bills for`);
+      expect(loggerSpy).toHaveBeenCalledWith('Monthly bill generation completed');
+
+      // Restore the original Date
+      global.Date = originalDate;
+    });
+  });
+
   describe('generateBillForTenant', () => {
     it('should generate a full month bill regardless of the day of month', async () => {
       // Mock data
-      const mockDate = new Date('2025-08-25'); // Testing on August 25th
       const tenant = {
         id: 1,
         name: 'John Doe',
@@ -206,14 +284,14 @@ describe('BillGenerationService', () => {
 
       mockBillRepository.create.mockReturnValue(mockCreatedBill);
 
-      // Mock calculateTotal method to return a value
+      // Override calculateTotal to return a specific value for this test
       jest.spyOn(service as any, 'calculateTotal').mockReturnValue(800);
 
       // When the bill is saved, it should have is_paid set to true
       const savedBill = {
         ...mockCreatedBill,
         id: 42,
-        total: 0,
+        total: 800,
         is_paid: true,
       };
       mockBillRepository.save.mockResolvedValue(savedBill);
@@ -232,6 +310,289 @@ describe('BillGenerationService', () => {
       );
 
       expect(result.is_paid).toBe(true);
+    });
+
+    it('should include previous unpaid balance in the new bill', async () => {
+      const tenant = {
+        id: 1,
+        name: 'John Doe',
+        apartment_id: 5,
+        apartment: {
+          id: 5,
+          base_rent: 1000,
+        },
+        advance_payment: 0,
+      };
+
+      // No existing bill for current month
+      mockBillRepository.findOne.mockResolvedValue(null);
+
+      // Previous month's bill is unpaid
+      const previousBill = {
+        id: 30,
+        tenant_id: 1,
+        total: 1200,
+        is_paid: false,
+        advance_payment: 0,
+      };
+      mockBillRepository.findOne.mockResolvedValueOnce(previousBill);
+
+      const mockCreatedBill = {
+        tenant_id: tenant.id,
+        apartment_id: tenant.apartment_id,
+        year: 2025,
+        month: 2, // February
+        rent: 1000,
+        water_bill: 0,
+        gas_bill: 0,
+        electricity_bill: 0,
+        internet_bill: 0,
+        service_charge: 0,
+        trash_bill: 0,
+        other_charges: 0,
+        previous_balance: 1200, // Previous month's unpaid total
+        advance_payment: 0,
+        due_date: new Date('2025-02-10'),
+        is_paid: false,
+        total: 0, // Will be calculated
+      };
+
+      mockBillRepository.create.mockReturnValue(mockCreatedBill);
+
+      // Calculate total as rent + previous_balance
+      jest.spyOn(service as any, 'calculateTotal').mockReturnValue(2200);
+
+      const savedBill = {
+        ...mockCreatedBill,
+        id: 42,
+        total: 2200,
+      };
+      mockBillRepository.save.mockResolvedValue(savedBill);
+
+      const result = await service.generateBillForTenant(
+        tenant as Tenant,
+        2025,
+        2,
+        new Date('2025-02-10'),
+      );
+
+      expect(mockBillRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          previous_balance: 1200,
+        }),
+      );
+      expect(result.total).toBe(2200);
+    });
+
+    it('should handle errors during bill generation', async () => {
+      const tenant = {
+        id: 1,
+        name: 'John Doe',
+        apartment_id: 5,
+        apartment: {
+          id: 5,
+          base_rent: 1000,
+        },
+      };
+
+      const error = new Error('Database error');
+      mockBillRepository.findOne.mockRejectedValue(error);
+
+      const loggerErrorSpy = jest.spyOn(Logger.prototype, 'error');
+
+      // Execute and expect it to throw
+      await expect(
+        service.generateBillForTenant(tenant as Tenant, 2025, 3, new Date()),
+      ).rejects.toThrow('Database error');
+
+      // Verify error was logged properly
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        `Error generating bill for tenant ${tenant.id}: Database error`,
+        expect.any(String), // Stack trace
+      );
+    });
+
+    it('should apply remaining advance payment from previous bill', async () => {
+      const tenant = {
+        id: 1,
+        name: 'John Doe',
+        apartment_id: 5,
+        apartment: {
+          id: 5,
+          base_rent: 1000,
+        },
+        advance_payment: 0,
+      };
+
+      // No existing bill for current month
+      mockBillRepository.findOne.mockResolvedValue(null);
+
+      // Previous month bill with advance payment exceeding total
+      const previousBill = {
+        id: 30,
+        tenant_id: 1,
+        total: 800,
+        is_paid: true,
+        advance_payment: 1500, // More than needed
+      };
+      mockBillRepository.findOne.mockResolvedValueOnce(previousBill);
+
+      const mockCreatedBill = {
+        tenant_id: tenant.id,
+        apartment_id: tenant.apartment_id,
+        year: 2025,
+        month: 2,
+        rent: 1000,
+        water_bill: 0,
+        gas_bill: 0,
+        electricity_bill: 0,
+        internet_bill: 0,
+        service_charge: 0,
+        trash_bill: 0,
+        other_charges: 0,
+        previous_balance: 0,
+        advance_payment: 700, // 1500 - 800 from previous bill
+        due_date: new Date('2025-02-10'),
+        is_paid: false,
+        total: 0,
+      };
+
+      mockBillRepository.create.mockReturnValue(mockCreatedBill);
+      
+      // Calculate total with advance payment subtracted
+      jest.spyOn(service as any, 'calculateTotal').mockReturnValue(300);
+
+      const savedBill = {
+        ...mockCreatedBill,
+        id: 42,
+        total: 300,
+      };
+      mockBillRepository.save.mockResolvedValue(savedBill);
+
+      const result = await service.generateBillForTenant(
+        tenant as Tenant,
+        2025,
+        2,
+        new Date('2025-02-10'),
+      );
+
+      expect(mockBillRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          advance_payment: 700,
+        }),
+      );
+      expect(result.total).toBe(300);
+    });
+  });
+
+  describe('calculateTotal', () => {
+    it('should correctly calculate the total bill amount', () => {
+      // Restore the original implementation for this specific test
+      jest.spyOn(service as any, 'calculateTotal').mockRestore();
+
+      const bill = {
+        rent: 1200,
+        water_bill: 50,
+        gas_bill: 30,
+        electricity_bill: 100,
+        internet_bill: 60,
+        service_charge: 80,
+        trash_bill: 20,
+        other_charges: 40,
+        previous_balance: 200,
+        advance_payment: 300,
+      };
+
+      const total = (service as any).calculateTotal(bill);
+      
+      // Total should be sum of all charges minus advance payment
+      const expectedTotal = 1200 + 50 + 30 + 100 + 60 + 80 + 20 + 40 + 200 - 300;
+      expect(total).toBe(expectedTotal);
+    });
+
+    it('should return 0 if advance payment exceeds total charges', () => {
+      // Restore the original implementation for this specific test
+      jest.spyOn(service as any, 'calculateTotal').mockRestore();
+
+      const bill = {
+        rent: 800,
+        water_bill: 50,
+        other_charges: 50,
+        advance_payment: 1000, // More than the sum of charges
+      };
+
+      const total = (service as any).calculateTotal(bill);
+      expect(total).toBe(0);
+    });
+
+    it('should handle undefined or null values', () => {
+      // Restore the original implementation for this specific test
+      jest.spyOn(service as any, 'calculateTotal').mockRestore();
+
+      const bill = {
+        rent: 1000,
+        // Other fields are undefined
+      };
+
+      const total = (service as any).calculateTotal(bill);
+      expect(total).toBe(1000); // Should only count the rent
+    });
+  });
+
+  describe('generateBillsForMonth', () => {
+    it('should generate bills for all active tenants for a specific month', async () => {
+      const year = 2025;
+      const month = 4; // April
+      
+      const tenants = [
+        {
+          id: 1,
+          name: 'John Doe',
+          apartment_id: 101,
+          apartment: { id: 101, base_rent: 1000 },
+          is_active: true,
+        },
+        {
+          id: 2,
+          name: 'Jane Smith',
+          apartment_id: 102,
+          apartment: { id: 102, base_rent: 1200 },
+          is_active: true,
+        },
+      ] as Tenant[];
+
+      mockTenantRepository.find.mockResolvedValue(tenants);
+      
+      const mockGeneratedBills = [
+        { id: 101, tenant_id: 1, month, year },
+        { id: 102, tenant_id: 2, month, year },
+      ] as Bill[];
+      
+      // Mock the tenant bill generation to return predefined bills
+      jest
+        .spyOn(service, 'generateBillForTenant')
+        .mockImplementation(async (tenant, y, m, dueDate) => {
+          return mockGeneratedBills.find(bill => bill.tenant_id === tenant.id) as Bill;
+        });
+
+      const result = await service.generateBillsForMonth(year, month);
+
+      expect(mockTenantRepository.find).toHaveBeenCalledWith({
+        where: { is_active: true },
+        relations: ['apartment'],
+      });
+      expect(service.generateBillForTenant).toHaveBeenCalledTimes(2);
+      expect(result).toEqual(mockGeneratedBills);
+      expect(loggerSpy).toHaveBeenCalledWith(`Manually generating bills for ${month}/${year}`);
+    });
+
+    it('should handle an empty tenant list', async () => {
+      mockTenantRepository.find.mockResolvedValue([]);
+      
+      const result = await service.generateBillsForMonth(2025, 5);
+      
+      expect(result).toEqual([]);
+      expect(service.generateBillForTenant).not.toHaveBeenCalled();
     });
   });
 });

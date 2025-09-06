@@ -1,0 +1,320 @@
+SDLC Layout
+1. Project Initiation & Requirements Analysis
+This phase is all about defining what you're going to build. The documentation here shows your ability to understand a problem and translate it into a clear plan.
+Software Requirements Specification (SRS) Document: This is the foundational document. It should include:
+Introduction: Briefly describe the purpose, scope, and target audience (you, the admin).
+Problem Statement: The current challenge of manually managing rental properties.
+Functional Requirements: The refined user stories you've already created, but formally listed and numbered. This is the "what" the system must do.
+Example: F1.1 - The system shall allow the admin to add, edit, and archive tenant profiles.
+Example: F1.2 - The system shall automatically calculate monthly rent, including carried-over dues.
+Non-Functional Requirements: The "how" the system should perform.
+Performance: The app must be responsive on mobile devices.
+Security: The admin login must be secure.
+Scalability: The database structure should be able to handle a growing number of tenants and apartments.
+Usability: The UI must be clean, minimalist, and easy to use.
+Constraints: Mention the chosen technology stack (NestJS, Next.js, PostgreSQL) as a project constraint.
+
+2. System Design & Architecture
+This phase is typically broken down into two main parts: High-Level Design (HLD) and Low-Level Design (LLD).
+
+High-Level Design (HLD) 🗺️
+HLD provides a macro, bird's-eye view of your entire system. It focuses on the overall architecture and how the major components interact with each other. This is the part of your documentation that shows you understand the big picture.
+Architectural Diagram: This is a key visual artifact. It will show the three main components of your application: the Next.js Frontend (client), the NestJS Backend (server), and the PostgreSQL Database. Use arrows to show the flow of data. For example, an arrow from the Frontend to the Backend for API calls, and from the Backend to the Database for data retrieval and storage.
+Technology Stack Justification: Formally document why you chose each technology.
+Next.js (Frontend): Explain its benefits for this project, such as server-side rendering for performance, the App Router for a clean file structure, and its robust ecosystem.
+NestJS (Backend): Highlight its use of TypeScript, modular architecture, and dependency injection, which make the backend scalable and maintainable.
+PostgreSQL (Database): Justify this choice by mentioning its reliability, relational structure (perfect for your data model), and support for advanced features.
+Module Breakdown: Create a high-level overview of the major modules you've planned. This should align with the folder structure you already defined (e.g., tenants, apartments, bills, payments, and reports).
+
+Low-Level Design (LLD) ✍️
+LLD is a more granular, detailed design for individual components. It's the blueprint that developers will follow to write the code. This is where you formally document the database structure and the API contract.
+Database Schema (ER Diagram): This is where you'll include the final, polished Entity-Relationship (ER) diagram you created. This diagram is a visual representation of your database tables, their columns, and the relationships between them. It is a critical part of the documentation.
+Detailed API Documentation: Go beyond the basic list of endpoints and provide a comprehensive API contract. For each endpoint, you should document:
+Method (e.g., GET, POST, PATCH).
+URL (e.g., /api/v1/tenants).
+Description (e.g., "Retrieves a list of all active tenants").
+Request Body (if applicable): A JSON schema or example of the data the frontend sends.
+Response Body: A JSON schema or example of the data the backend returns for both success and error scenarios.
+Data Models: Define the exact data structures (or interfaces) that will be used across the application. For a TypeScript project, this would be defining interfaces like ITenant, IBill, and IPayment, specifying each field and its data type. This ensures data consistency between the frontend and backend.
+
+
+
+3. Implementation & Testing
+This phase documents the actual coding and verification process.
+Project Structure: Show a tree diagram of your final file and folder structure. This proves you thought about organization.
+Code Comments & Best Practices: Note that the code is heavily commented to explain functionality. Mention adherence to coding standards, using clean, modular functions.
+Testing Plan: Even for a solo project, you must have a plan.
+Unit Tests: Mention testing individual functions or components (e.g., a function to calculate total bill amount).
+Integration Tests: Describe testing the interaction between modules (e.g., ensuring the PaymentService correctly updates the Bill record).
+System/End-to-End Tests: Outline a plan to test the entire user flow from the frontend to the backend (e.g., logging in, adding a tenant, and logging a payment).
+
+4. Deployment & Maintenance
+This phase demonstrates your understanding of getting the product live and keeping it running.
+Deployment Strategy: Explain how you will deploy the application (e.g., using Docker to containerize the app, then deploying to a cloud service like Vercel for the frontend and a private server or Heroku for the backend).
+Maintenance & Future Work: Acknowledge that a project is never truly "done." List potential future features (e.g., tenant-facing login to view their bills, email notifications for rent dues, adding multiple admins). This shows foresight and a long-term vision.
+
+1. Requirements
+
+1. Introduction
+1.1 Purpose
+This document specifies the functional and non-functional requirements for a web-based rent management system. The primary goal is to provide a comprehensive tool for an admin to efficiently manage rental properties, track payments, and generate detailed reports, automating tasks that are currently handled manually.
+1.2 Product Scope
+The system will provide an admin-only portal for managing rental properties, tenants, bills, and payments. It includes a user-friendly dashboard, detailed tenant profiles, automated bill generation, and the ability to produce a single-page PDF report.
+1.3 Intended Audience
+This document is intended for developers, quality assurance testers, and project managers. It will serve as a single source of truth for all project requirements.
+
+2. Overall Description
+2.1 Assumptions and Dependencies
+The admin has access to a modern web browser and a stable internet connection.
+The admin is the sole user of the system.
+The application will be deployed in a cloud-based environment.
+A running PostgreSQL database instance is available.
+The backend will use a RESTful API architecture.
+
+3. Functional Requirements
+3.1 Admin Management
+F3.1.1 The system shall allow an admin to securely log in.
+
+
+F3.1.2 The system shall allow an admin to add, view, and manage multiple rental properties (apartments).
+
+
+F3.1.3 The system shall allow an admin to add and manage tenant profiles, including name, phone number, NID, photo, and meter number.
+
+
+3.2 Automated Rent & Payment System
+F3.2.1 The system shall automatically generate a monthly bill for each tenant on a specified date.
+
+
+F3.2.2 The system shall automatically carry forward any unpaid amount (due) from the previous month and add it to the current month's bill.
+
+
+F3.2.3 The system shall allow the admin to manually edit any part of a tenant's bill for a given month.
+
+
+F3.2.4 The system shall allow the admin to log a rent payment received from a tenant.
+
+
+F3.2.5 The system shall automatically calculate the remaining balance after a payment is logged.
+
+
+F3.2.6 If a payment exceeds the bill amount, the system shall record the excess as an advance for the next month's bill calculation.
+
+
+3.3 Dashboard and Reporting
+F3.3.1 The dashboard shall provide a quick overview of key financial metrics, including total expected rent, total collected rent, and outstanding dues for the current month.
+
+
+F3.3.2 The dashboard shall display a clear list of tenants' current month payment statuses (e.g., "Paid," "Due," "Overdue").
+
+
+F3.3.3 The system shall generate a single PDF report containing detailed bill sections for all tenants for a given month.
+
+
+3.4 Customization
+F3.4.1 The system shall allow the admin to enable or disable specific bill items (e.g., Water Bill, Staircase Cleaning Bill) for individual tenants.
+
+
+F3.4.2 The system shall allow the admin to add new, ad-hoc charges under the "Others" category with a custom name and amount.
+
+
+3.5 Tenant Lifecycle
+F3.5.1 The system shall allow the admin to archive a tenant, marking their profile and history as inactive without deleting them.
+
+
+F3.5.2 The system shall maintain a complete history of all payments and bills for each tenant, even after they are archived.
+
+
+
+4. Non-Functional Requirements
+4.1 Performance
+NFR4.1.1 All dashboard and data retrieval API calls shall have a response time of less than 1.5 seconds under typical load.
+
+
+NFR4.1.2 The PDF generation process for 20+ tenants shall not exceed 10 seconds.
+
+
+4.2 Security
+NFR4.2.1 The system shall enforce secure admin authentication using a robust method (e.g., JWT, OAuth).
+
+
+NFR4.2.2 The system shall implement proper input validation to prevent SQL injection and other common security vulnerabilities.
+
+
+4.3 Usability
+NFR4.3.1 The application's UI shall be clean, minimalist, and consistent with an "Apple-esque" design aesthetic.
+
+
+NFR4.3.2 The system shall be fully mobile-responsive, providing an optimal user experience on screens from 375px wide and up.
+
+
+4.4 Maintainability
+NFR4.4.1 The codebase shall be modular and well-documented to facilitate easy maintenance and future feature additions.
+
+
+NFR4.4.2 The system's API endpoints shall be versioned to allow for seamless updates.
+
+
+2. System Architecture
+2.1 High-Level Design (HLD)
+2.1.1 Architectural Overview
+The application follows a three-tier architecture, separating the system into independent tiers to improve scalability, maintainability, and separation of concerns:
+Presentation Tier (Frontend):
+
+
+Built using Next.js and Tailwind CSS.
+
+
+Handles all user interactions and displays data to the admin.
+
+
+Application Tier (Backend):
+
+
+Built using NestJS.
+
+
+Implements business logic, enforces rules, and interacts with the database.
+
+
+Data Tier (Database):
+
+
+PostgreSQL is used as the persistent data store.
+
+
+Stores all information about apartments, tenants, bills, payments, and history.
+
+
+2.1.2 Technology Stack Justification
+Component
+Technology
+Justification
+Frontend
+Next.js
+Server-side rendering (SSR), App Router for organized file structure, full-stack ecosystem.
+Backend
+NestJS
+Modular architecture, TypeScript type safety, scalable and maintainable API design.
+Database
+PostgreSQL
+Relational structure suited for interconnected data; reliable with strong data integrity.
+
+2.1.3 Architectural Diagram
+
+2.2 Low-Level Design (LLD)
+2.2.1 Database Schema (Data Model)
+The database schema defines tables, attributes, and relationships necessary to support all functional requirements.
+Entities & Attributes:
+Admin: id (PK), username, password_hash
+
+
+Apartment: id (PK), address, is_occupied
+
+
+Tenant: id (PK), name, phone_number, nid (unique), photo_url, meter_number, apartment_id (FK), is_active
+
+
+Bill: id (PK), tenant_id (FK), month, year, rent_amount, water_bill, gas_bill, carried_over_due, total
+
+
+BillItem: id (PK), bill_id (FK), name, amount
+
+
+Payment: id (PK), tenant_id (FK), amount_paid, payment_date
+
+
+TenantHistory: id (PK), tenant_id (FK), apartment_id (FK), start_date, end_date
+
+
+2.2.2 REST API Endpoints
+The system exposes a RESTful API between frontend and backend. Each endpoint defines its method, request body, and response.
+Authentication
+Method
+Endpoint
+Description
+POST
+/auth/login
+Authenticates the admin user
+
+Apartment Management
+Method
+Endpoint
+Description
+GET
+/apartments
+Retrieves a list of all apartments and their current tenant info
+POST
+/apartments
+Creates a new apartment
+
+Tenant Management
+Method
+Endpoint
+Description
+GET
+/tenants
+Retrieves all active tenants
+GET
+/tenants/archive
+Retrieves archived tenants
+POST
+/tenants
+Adds a new tenant
+GET
+/tenants/:id
+Retrieves a specific tenant’s profile, bills, and payments
+PATCH
+/tenants/:id
+Updates a tenant’s profile details
+POST
+/tenants/:id/archive
+Archives a tenant and clears their associated apartment
+DELETE
+/tenants/:id
+Permanently deletes a tenant and all their history
+
+Bill Management
+Method
+Endpoint
+Description
+POST
+/bills/generate
+Generates new bills for all active tenants for the current month
+PATCH
+/bills/:id
+Manually edits a specific bill
+POST
+/bills/:id/items
+Adds a new ad-hoc bill item to an existing bill
+
+Payment Management
+Method
+Endpoint
+Description
+POST
+/payments
+Logs a new payment from a tenant
+
+Reporting & Dashboard
+Method
+Endpoint
+Description
+GET
+/reports/monthly-pdf
+Generates a single PDF report of all monthly bills
+GET
+/dashboard/summary
+Retrieves dashboard overview data, including payment status and totals
+
+2.3 Design Considerations
+Scalability: Three-tier separation allows independent scaling of frontend, backend, and database.
+
+
+Security: Authentication via JWT, input validation, and role-based access control.
+
+
+Maintainability: Modular code structure and RESTful API design.
+
+
+Traceability: Each entity is directly mapped to functional requirements (apartments, tenants, bills, payments).

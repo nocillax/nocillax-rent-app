@@ -1,10 +1,123 @@
-# nocillax-rent-app
+# Nocillax Rent App
 
-## Rental Management Application
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
-A comprehensive rental management application with billing, payments, and tenant management.
+## Comprehensive Rental Management Application
 
-### Core Billing Model: Running Month Billing
+A full-featured property management system designed to streamline apartment rentals, tenant management, billing, and payment processing. Perfect for property managers and landlords who need a complete solution for managing their rental properties.
+
+## Table of Contents
+
+- [Features](#features)
+- [System Architecture](#system-architecture)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+  - [Database Setup](#database-setup)
+- [Core Business Model](#core-business-model)
+- [API Documentation](#api-documentation)
+- [Module Overview](#module-overview)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- **Apartment Management**: Track units, features, availability, and rental rates
+- **Tenant Management**: Store tenant details, documents, and lease information
+- **Billing System**: Automated monthly bill generation with customizable charges
+- **Payment Processing**: Record and track payments with remaining balance calculation
+- **Financial Dashboard**: Real-time overview of income, outstanding balances, and financial metrics
+- **Reporting**: Generate financial reports, payment histories, and tenant statements
+- **User Authentication**: Secure admin login with JWT authentication
+- **Responsive UI**: Modern interface that works across devices
+
+## System Architecture
+
+### Frontend
+
+- **Framework**: Next.js 14 (React)
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **API Integration**: Axios
+- **Charts & Visualization**: Chart.js
+
+### Backend
+
+- **Framework**: NestJS
+- **Database ORM**: TypeORM
+- **Authentication**: JWT (JSON Web Tokens)
+- **API**: RESTful endpoints
+- **Validation**: Class-validator and DTOs
+- **PDF Generation**: PDFKit for report generation
+
+### Database
+
+- **Primary Database**: PostgreSQL
+- **Schema Management**: TypeORM migrations
+
+## Installation
+
+### Prerequisites
+
+- Node.js (v18 or later)
+- npm or yarn
+- PostgreSQL (v15 or later)
+- Docker and Docker Compose (optional, for containerized setup)
+
+### Backend Setup
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env file with your database credentials
+
+# Run database migrations
+npm run migration:run
+
+# Start the development server
+npm run start:dev
+```
+
+### Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env file with your backend API URL
+
+# Start the development server
+npm run dev
+```
+
+### Database Setup
+
+The application uses PostgreSQL. You can set it up locally or use Docker:
+
+```bash
+# Using Docker Compose in the backend directory
+cd backend
+docker-compose up -d
+```
+
+## Core Business Model
+
+### Running Month Billing
 
 This application uses a "running month" billing model:
 
@@ -29,17 +142,135 @@ This application uses a "running month" billing model:
    - Overpayments are stored as advance payments and carry over to future bills
    - Security deposits are separate from advance payments and only used at checkout
 
-### System Architecture
+## API Documentation
 
-- **Frontend**: Next.js application with Tailwind CSS
-- **Backend**: NestJS with TypeORM for database management
-- **Database**: PostgreSQL (configured via environment variables)
+The API follows RESTful conventions with the following main endpoints:
 
-### Key Modules
+### Authentication
 
-- Tenant Management
-- Apartment Management
-- Billing System
-- Payment Processing
-- Report Generation
-- Tenant Closure and Final Settlement
+- `POST /auth/login` - Admin login to get JWT token
+
+### Apartments
+
+- `GET /apartments` - List all apartments
+- `GET /apartments/:id` - Get apartment details
+- `POST /apartments` - Create new apartment
+- `PATCH /apartments/:id` - Update apartment
+- `DELETE /apartments/:id` - Delete apartment
+
+### Tenants
+
+- `GET /tenants` - List all tenants
+- `GET /tenants/:id` - Get tenant details
+- `POST /tenants` - Create new tenant
+- `PATCH /tenants/:id` - Update tenant
+- `DELETE /tenants/:id` - Delete tenant
+- `GET /tenants/:id/payment-history` - Get tenant payment history
+
+### Bills
+
+- `GET /bills` - List all bills
+- `GET /bills/:id` - Get bill details
+- `POST /bills` - Create new bill
+- `PATCH /bills/:id` - Update bill
+- `DELETE /bills/:id` - Delete bill
+- `POST /bills/generate` - Generate monthly bills
+
+### Payments
+
+- `GET /payments` - List all payments
+- `GET /payments/:id` - Get payment details
+- `POST /payments` - Create new payment
+- `PATCH /payments/:id` - Update payment
+- `DELETE /payments/:id` - Delete payment
+
+### Dashboard
+
+- `GET /dashboard/financial-summary` - Get financial dashboard data
+- `GET /dashboard/tenant-statuses` - Get tenant payment status overview
+- `GET /dashboard/yearly-summary/:year` - Get yearly financial summary
+
+### Reports
+
+- `GET /reports/monthly-statement/:year/:month` - Generate monthly statement PDF
+- `GET /reports/tenant/:tenantId` - Generate tenant statement PDF
+
+## Module Overview
+
+### Apartments Module
+
+Manages apartment information including number, features, rent amount, and status.
+
+### Tenants Module
+
+Handles tenant records including personal information, lease terms, security deposit, and payment history.
+
+### Bills Module
+
+Manages regular monthly bills and other charges. Includes automatic bill generation functionality.
+
+### Payments Module
+
+Records tenant payments with calculation of remaining balances and advance payment tracking.
+
+### Dashboard Module
+
+Provides real-time financial insights and tenant payment statuses for administrative overview.
+
+### Reports Module
+
+Generates PDF reports for monthly statements and tenant payment histories.
+
+### Auth Module
+
+Handles admin authentication and security using JWT tokens.
+
+## Testing
+
+The application includes comprehensive test coverage:
+
+```bash
+# Run backend tests
+cd backend
+npm test
+
+# Run frontend tests
+cd frontend
+npm test
+```
+
+## Deployment
+
+### Backend Deployment
+
+```bash
+cd backend
+npm run build
+npm run start:prod
+```
+
+### Frontend Deployment
+
+```bash
+cd frontend
+npm run build
+npm start
+```
+
+### Docker Deployment
+
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
