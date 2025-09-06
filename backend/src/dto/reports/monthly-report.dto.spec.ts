@@ -1,8 +1,15 @@
-import { validate } from 'class-validator';
+import { validate, IsNumber, Min, Max } from 'class-validator';
+import { plainToClass } from 'class-transformer';
 
-// Create a mock MonthlyReportDto without decorator dependencies
+// Create a mock MonthlyReportDto with validation decorators
 class MonthlyReportDto {
+  @IsNumber()
+  @Min(2000)
   year: number;
+
+  @IsNumber()
+  @Min(1)
+  @Max(12)
   month: number;
 }
 

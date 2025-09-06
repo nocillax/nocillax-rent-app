@@ -11,19 +11,23 @@ describe('PaymentsService - Specialized Queries', () => {
   let service: PaymentsService;
   let paymentsRepository: Repository<Payment>;
   let tenantsService: TenantsService;
+  let mockQueryBuilder: any;
 
   // Create mock for QueryBuilder that correctly returns itself for method chaining
-  const queryBuilderMock = {
-    select: jest.fn().mockReturnThis(),
-    addSelect: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    leftJoinAndSelect: jest.fn().mockReturnThis(),
-    innerJoin: jest.fn().mockReturnThis(),
-    groupBy: jest.fn().mockReturnThis(),
-    addGroupBy: jest.fn().mockReturnThis(),
-    getRawOne: jest.fn(),
-    getRawMany: jest.fn(),
+  const createQueryBuilderMock = () => {
+    const mock = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
+      addGroupBy: jest.fn().mockReturnThis(),
+      getRawOne: jest.fn(),
+      getRawMany: jest.fn(),
+    };
+    return mock;
   };
 
   const mockPaymentsRepository = {
@@ -33,7 +37,7 @@ describe('PaymentsService - Specialized Queries', () => {
     save: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
-    createQueryBuilder: jest.fn().mockReturnValue(queryBuilderMock),
+    createQueryBuilder: jest.fn(),
   };
 
   const mockTenantsService = {
@@ -44,6 +48,10 @@ describe('PaymentsService - Specialized Queries', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
+    // Create a new query builder mock for each test
+    mockQueryBuilder = createQueryBuilderMock();
+    mockPaymentsRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -78,22 +86,32 @@ describe('PaymentsService - Specialized Queries', () => {
     it('should return the total payments for a tenant', async () => {
       const tenantId = 42;
       const expectedTotal = 2500.75;
-      
-      queryBuilderMock.getRawOne.mockResolvedValue({ total: expectedTotal.toString() });
+
+      mockQueryBuilder.getRawOne.mockResolvedValue({
+        total: expectedTotal.toString(),
+      });
 
       const result = await service.getTotalPaymentsByTenantId(tenantId);
 
       expect(result).toBe(expectedTotal);
-      expect(paymentsRepository.createQueryBuilder).toHaveBeenCalledWith('payment');
-      expect(queryBuilderMock.select).toHaveBeenCalledWith('SUM(payment.amount)', 'total');
-      expect(queryBuilderMock.where).toHaveBeenCalledWith('payment.tenant_id = :tenantId', { tenantId });
-      expect(queryBuilderMock.getRawOne).toHaveBeenCalled();
+      expect(paymentsRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'payment',
+      );
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith(
+        'SUM(payment.amount)',
+        'total',
+      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'payment.tenant_id = :tenantId',
+        { tenantId },
+      );
+      expect(mockQueryBuilder.getRawOne).toHaveBeenCalled();
     });
 
     it('should return 0 when no payments exist', async () => {
       const tenantId = 42;
-      
-      queryBuilderMock.getRawOne.mockResolvedValue({ total: null });
+
+      mockQueryBuilder.getRawOne.mockResolvedValue({ total: null });
 
       const result = await service.getTotalPaymentsByTenantId(tenantId);
 
@@ -102,9 +120,9 @@ describe('PaymentsService - Specialized Queries', () => {
 
     it('should parse string results to float', async () => {
       const tenantId = 42;
-      const rawTotal = "1234.56";
-      
-      queryBuilderMock.getRawOne.mockResolvedValue({ total: rawTotal });
+      const rawTotal = '1234.56';
+
+      mockQueryBuilder.getRawOne.mockResolvedValue({ total: rawTotal });
 
       const result = await service.getTotalPaymentsByTenantId(tenantId);
 
@@ -118,41 +136,54 @@ describe('PaymentsService - Specialized Queries', () => {
       const year = 2025;
       const month = 8;
       const expectedSummary = [
-        { 
-          tenantId: 1, 
+        {
+          tenantId: 1,
           totalAmount: '1500.00',
-          tenant_name: 'John Doe'
+          tenant_name: 'John Doe',
         },
-        { 
-          tenantId: 2, 
+        {
+          tenantId: 2,
           totalAmount: '1200.50',
-          tenant_name: 'Jane Smith'
-        }
+          tenant_name: 'Jane Smith',
+        },
       ];
 
-      queryBuilderMock.getRawMany.mockResolvedValue(expectedSummary);
+      mockQueryBuilder.getRawMany.mockResolvedValue(expectedSummary);
 
       const result = await service.getMonthlyPaymentSummary(year, month);
 
       expect(result).toEqual(expectedSummary);
-      expect(paymentsRepository.createQueryBuilder).toHaveBeenCalledWith('payment');
-      expect(queryBuilderMock.select).toHaveBeenCalledWith('payment.tenant_id', 'tenantId');
-      expect(queryBuilderMock.addSelect).toHaveBeenCalledWith('SUM(payment.amount)', 'totalAmount');
-      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('payment.tenant', 'tenant');
-      expect(queryBuilderMock.where).toHaveBeenCalledWith(
+      expect(paymentsRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'payment',
+      );
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith(
+        'payment.tenant_id',
+        'tenantId',
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+        'SUM(payment.amount)',
+        'totalAmount',
+      );
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'payment.tenant',
+        'tenant',
+      );
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
         'payment.date BETWEEN :startDate AND :endDate',
         {
           startDate: new Date(year, month - 1, 1),
           endDate: new Date(year, month, 0),
-        }
+        },
       );
-      expect(queryBuilderMock.groupBy).toHaveBeenCalledWith('payment.tenant_id');
-      expect(queryBuilderMock.addGroupBy).toHaveBeenCalledWith('tenant.name');
-      expect(queryBuilderMock.getRawMany).toHaveBeenCalled();
+      expect(mockQueryBuilder.groupBy).toHaveBeenCalledWith(
+        'payment.tenant_id',
+      );
+      expect(mockQueryBuilder.addGroupBy).toHaveBeenCalledWith('tenant.name');
+      expect(mockQueryBuilder.getRawMany).toHaveBeenCalled();
     });
 
     it('should return empty array when no payments exist for the month', async () => {
-      queryBuilderMock.getRawMany.mockResolvedValue([]);
+      mockQueryBuilder.getRawMany.mockResolvedValue([]);
 
       const result = await service.getMonthlyPaymentSummary(2025, 9);
 
@@ -171,7 +202,7 @@ describe('PaymentsService - Specialized Queries', () => {
           remaining_balance: 500,
           payment_method: 'Credit Card',
           reference_number: 'REF12345',
-          tenant_id: tenantId
+          tenant_id: tenantId,
         },
         {
           id: 2,
@@ -180,8 +211,8 @@ describe('PaymentsService - Specialized Queries', () => {
           remaining_balance: 0,
           payment_method: 'Bank Transfer',
           reference_number: 'REF67890',
-          tenant_id: tenantId
-        }
+          tenant_id: tenantId,
+        },
       ];
 
       mockPaymentsRepository.find.mockResolvedValue(payments);
@@ -195,7 +226,7 @@ describe('PaymentsService - Specialized Queries', () => {
           amount: 1500,
           remaining_balance: 500,
           payment_method: 'Credit Card',
-          reference_number: 'REF12345'
+          reference_number: 'REF12345',
         },
         {
           payment_id: 2,
@@ -203,13 +234,13 @@ describe('PaymentsService - Specialized Queries', () => {
           amount: 1500,
           remaining_balance: 0,
           payment_method: 'Bank Transfer',
-          reference_number: 'REF67890'
-        }
+          reference_number: 'REF67890',
+        },
       ]);
 
       expect(mockPaymentsRepository.find).toHaveBeenCalledWith({
         where: { tenant_id: tenantId },
-        order: { date: 'ASC' }
+        order: { date: 'ASC' },
       });
     });
 
@@ -223,8 +254,8 @@ describe('PaymentsService - Specialized Queries', () => {
           remaining_balance: null, // Null value
           payment_method: 'Cash',
           reference_number: 'REF12345',
-          tenant_id: tenantId
-        }
+          tenant_id: tenantId,
+        },
       ];
 
       mockPaymentsRepository.find.mockResolvedValue(payments);
@@ -238,8 +269,8 @@ describe('PaymentsService - Specialized Queries', () => {
           amount: 1500,
           remaining_balance: 0, // Should default to 0
           payment_method: 'Cash',
-          reference_number: 'REF12345'
-        }
+          reference_number: 'REF12345',
+        },
       ]);
     });
 
@@ -261,8 +292,8 @@ describe('PaymentsService - Specialized Queries', () => {
         name: 'John Doe',
         bills: [
           { id: 1, total: 1500, is_paid: false },
-          { id: 2, total: 1500, is_paid: true }
-        ]
+          { id: 2, total: 1500, is_paid: true },
+        ],
       };
 
       // Total payments of 3500 exceeds bill totals (3000)
@@ -274,7 +305,7 @@ describe('PaymentsService - Specialized Queries', () => {
 
       // The advance should be 3500 - (1500+1500) = 500
       expect(mockTenantsService.update).toHaveBeenCalledWith(tenant.id, {
-        advance_payment: 500
+        advance_payment: 500,
       });
     });
 
@@ -285,8 +316,8 @@ describe('PaymentsService - Specialized Queries', () => {
         name: 'John Doe',
         bills: [
           { id: 1, total: 1500, is_paid: false },
-          { id: 2, total: 1500, is_paid: false }
-        ]
+          { id: 2, total: 1500, is_paid: false },
+        ],
       };
 
       // Total payments of 2000 is less than bill totals (3000)
@@ -305,7 +336,7 @@ describe('PaymentsService - Specialized Queries', () => {
       const tenant = {
         id: 42,
         name: 'John Doe',
-        bills: []
+        bills: [],
       };
 
       // Any payment would be advance
@@ -317,14 +348,14 @@ describe('PaymentsService - Specialized Queries', () => {
 
       // The full payment should be advance
       expect(mockTenantsService.update).toHaveBeenCalledWith(tenant.id, {
-        advance_payment: 1000
+        advance_payment: 1000,
       });
     });
 
     it('should handle undefined tenant gracefully', async () => {
       // Call with undefined tenant
       const getTotalSpy = jest.spyOn(service, 'getTotalPaymentsByTenantId');
-      
+
       await (service as any).processAdvancePayment(undefined);
 
       // Should return early without errors
@@ -340,14 +371,17 @@ describe('PaymentsService - Specialized Queries', () => {
         bills: [
           { id: 1, total: 1500, is_paid: false },
           { id: 2, total: 1000, is_paid: false },
-          { id: 3, total: 800, is_paid: true } // This should be ignored (already paid)
-        ]
+          { id: 3, total: 800, is_paid: true }, // This should be ignored (already paid)
+        ],
       };
-      
+
       const paymentAmount = 1800;
 
       // Call the private method
-      const result = await (service as any).calculateRemainingBalance(tenant, paymentAmount);
+      const result = await (service as any).calculateRemainingBalance(
+        tenant,
+        paymentAmount,
+      );
 
       // Should be (1500+1000) - 1800 = 700
       expect(result).toBe(700);
@@ -358,30 +392,39 @@ describe('PaymentsService - Specialized Queries', () => {
         id: 42,
         bills: [
           { id: 1, total: 1500, is_paid: false },
-          { id: 2, total: 800, is_paid: false }
-        ]
+          { id: 2, total: 800, is_paid: false },
+        ],
       };
-      
+
       const paymentAmount = 3000; // More than total bills
 
-      const result = await (service as any).calculateRemainingBalance(tenant, paymentAmount);
+      const result = await (service as any).calculateRemainingBalance(
+        tenant,
+        paymentAmount,
+      );
       expect(result).toBe(0);
     });
 
     it('should return 0 for tenant with no bills', async () => {
       const tenant = {
         id: 42,
-        bills: []
+        bills: [],
       };
-      
+
       const paymentAmount = 1000;
 
-      const result = await (service as any).calculateRemainingBalance(tenant, paymentAmount);
+      const result = await (service as any).calculateRemainingBalance(
+        tenant,
+        paymentAmount,
+      );
       expect(result).toBe(0);
     });
 
     it('should return 0 if tenant is undefined', async () => {
-      const result = await (service as any).calculateRemainingBalance(undefined, 1000);
+      const result = await (service as any).calculateRemainingBalance(
+        undefined,
+        1000,
+      );
       expect(result).toBe(0);
     });
 
@@ -390,13 +433,16 @@ describe('PaymentsService - Specialized Queries', () => {
         id: 42,
         bills: [
           { id: 1, total: '1500.50', is_paid: false }, // String total
-          { id: 2, total: '999.99', is_paid: false }   // String total
-        ]
+          { id: 2, total: '999.99', is_paid: false }, // String total
+        ],
       };
-      
+
       const paymentAmount = 2000;
 
-      const result = await (service as any).calculateRemainingBalance(tenant, paymentAmount);
+      const result = await (service as any).calculateRemainingBalance(
+        tenant,
+        paymentAmount,
+      );
       // Should be (1500.50+999.99) - 2000 = ~500.49
       expect(result).toBeCloseTo(500.49, 2);
     });

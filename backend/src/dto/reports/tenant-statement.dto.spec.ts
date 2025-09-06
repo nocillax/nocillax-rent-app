@@ -1,9 +1,15 @@
-import { validate } from 'class-validator';
+import { validate, IsNumber, IsDateString } from 'class-validator';
+import { plainToClass } from 'class-transformer';
 
-// Create a mock TenantStatementDto without decorator dependencies
+// Create a mock TenantStatementDto with validation decorators
 class TenantStatementDto {
+  @IsNumber()
   tenantId: number;
+
+  @IsDateString()
   startDate: string;
+
+  @IsDateString()
   endDate: string;
 }
 
