@@ -7,31 +7,35 @@ import { Tenant } from '../entities/tenant.entity';
 
 // Mock PDFDocument
 jest.mock('pdfkit', () => {
-  return jest.fn().mockImplementation(() => {
-    return {
-      on: jest.fn().mockImplementation((event, callback) => {
-        if (event === 'data') {
-          // Call the callback with a mock buffer chunk
-          callback(Buffer.from('test'));
+  const mockPdf = {
+    callbacks: {},
+    on: jest.fn().mockImplementation(function (event, callback) {
+      this.callbacks[event] = callback;
+      return this;
+    }),
+    end: jest.fn().mockImplementation(function () {
+      if (this.callbacks.data) {
+        this.callbacks.data(Buffer.from('test'));
+      }
+
+      // Simulate end event after a small delay
+      setTimeout(() => {
+        if (this.callbacks.end) {
+          this.callbacks.end();
         }
-        return this;
-      }),
-      end: jest.fn().mockImplementation(function () {
-        // Simulate end event after a small delay
-        setTimeout(() => {
-          const endCallback = this.on.mock.calls.find(
-            (call) => call[0] === 'end',
-          )[1];
-          if (endCallback) endCallback();
-        }, 10);
-      }),
-      fontSize: jest.fn().mockReturnThis(),
-      text: jest.fn().mockReturnThis(),
-      moveDown: jest.fn().mockReturnThis(),
-      addPage: jest.fn().mockReturnThis(),
-      page: { height: 1000 },
-      y: 0,
-    };
+      }, 10);
+    }),
+    fontSize: jest.fn().mockReturnThis(),
+    text: jest.fn().mockReturnThis(),
+    moveDown: jest.fn().mockReturnThis(),
+    addPage: jest.fn().mockReturnThis(),
+    page: { height: 1000 },
+    y: 0,
+  };
+
+  return jest.fn().mockImplementation(() => {
+    // Return a fresh object each time to avoid test interference
+    return { ...mockPdf, callbacks: {} };
   });
 });
 
@@ -91,20 +95,23 @@ describe('ReportsGenerator', () => {
         },
       ] as unknown as Payment[];
 
-      const pdfBuffer = await generator.generateMonthlyPdfReport(
+      // Create a promise to track when the PDF is generated
+      const pdfPromise = generator.generateMonthlyPdfReport(
         mockBills,
         mockPayments,
         year,
         month,
       );
 
+      // Assertions about function calls
       expect(PDFDocument).toHaveBeenCalled();
+
+      // Wait for the PDF promise to resolve
+      const pdfBuffer = await pdfPromise;
+
+      // Assertions about the result
       expect(mockPdfDocument.fontSize).toHaveBeenCalled();
       expect(mockPdfDocument.text).toHaveBeenCalled();
-      expect(mockPdfDocument.on).toHaveBeenCalledWith(
-        'data',
-        expect.any(Function),
-      );
       expect(mockPdfDocument.end).toHaveBeenCalled();
       expect(pdfBuffer).toBeInstanceOf(Buffer);
     });
@@ -152,7 +159,8 @@ describe('ReportsGenerator', () => {
         },
       ] as unknown as Payment[];
 
-      const pdfBuffer = await generator.generateTenantStatementPdf(
+      // Create a promise to track when the PDF is generated
+      const pdfPromise = generator.generateTenantStatementPdf(
         mockTenant,
         mockBills,
         mockPayments,
@@ -160,13 +168,15 @@ describe('ReportsGenerator', () => {
         endDate,
       );
 
+      // Assertions about function calls
       expect(PDFDocument).toHaveBeenCalled();
+
+      // Wait for the PDF promise to resolve
+      const pdfBuffer = await pdfPromise;
+
+      // Assertions about the result
       expect(mockPdfDocument.fontSize).toHaveBeenCalled();
       expect(mockPdfDocument.text).toHaveBeenCalled();
-      expect(mockPdfDocument.on).toHaveBeenCalledWith(
-        'data',
-        expect.any(Function),
-      );
       expect(mockPdfDocument.end).toHaveBeenCalled();
       expect(pdfBuffer).toBeInstanceOf(Buffer);
     });

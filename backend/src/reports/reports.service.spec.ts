@@ -16,9 +16,13 @@ jest.mock('fs-extra', () => ({
 }));
 
 // Mock path module
-jest.mock('path', () => ({
-  join: jest.fn((dir, file) => `${dir}/${file}`),
-}));
+jest.mock('path', () => {
+  const originalPath = jest.requireActual('path');
+  return {
+    ...originalPath,
+    join: jest.fn((dir, file) => `${dir}/${file}`),
+  };
+});
 
 describe('ReportsService', () => {
   let service: ReportsService;
@@ -98,13 +102,17 @@ describe('ReportsService', () => {
 
       const result = await service.generateMonthlyPdfReport(year, month);
 
+      // Calculate expected date range
+      const startDate = new Date(year, month - 1, 1); // Month is 0-indexed in Date
+      const endDate = new Date(year, month, 0); // Last day of the month
+
       expect(billsRepository.find).toHaveBeenCalledWith({
         where: { year, month },
         relations: ['tenant'],
       });
       expect(paymentsRepository.find).toHaveBeenCalledWith({
         where: {
-          date: expect.any(Object), // Using Between requires special handling in tests
+          date: Between(startDate, endDate),
         },
         relations: ['tenant'],
       });
@@ -147,11 +155,17 @@ describe('ReportsService', () => {
         where: { id: tenantId },
         relations: ['apartment'],
       });
-      expect(billsRepository.find).toHaveBeenCalled();
+      expect(billsRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.arrayContaining([
+            expect.objectContaining({ tenant_id: tenantId }),
+          ]),
+        }),
+      );
       expect(paymentsRepository.find).toHaveBeenCalledWith({
         where: {
           tenant_id: tenantId,
-          date: expect.any(Object), // Using Between requires special handling in tests
+          date: Between(startDate, endDate),
         },
       });
       expect(reportsGenerator.generateTenantStatementPdf).toHaveBeenCalledWith(
@@ -181,22 +195,38 @@ describe('ReportsService', () => {
     it('should save report to file', async () => {
       const pdfBuffer = Buffer.from('pdf content');
       const filename = 'test-report.pdf';
-      const mockFilePath = 'reports/test-report.pdf';
+      const mockFilePath = '/app/reports/test-report.pdf';
 
       // Mock process.cwd()
-      jest.spyOn(process, 'cwd').mockReturnValue('/app');
+      const cwdSpy = jest.spyOn(process, 'cwd');
+      cwdSpy.mockReturnValue('/app');
 
-      // Mock path.join
-      const joinSpy = jest
-        .spyOn(path, 'join')
-        .mockReturnValueOnce('/app/reports') // For the directory path
-        .mockReturnValueOnce(mockFilePath); // For the file path
+      // Mock path.join for directory and file paths
+      const joinSpy = jest.spyOn(path, 'join');
+      joinSpy.mockImplementation((...args) => {
+        if (args[1] === 'reports' && args.length === 2) {
+          return '/app/reports';
+        } else if (args[1] === filename) {
+          return mockFilePath;
+        }
+        return args.join('/');
+      });
+
+      // Reset the mocks to ensure they are clean
+      jest.clearAllMocks();
 
       const result = await service.saveReportToFile(pdfBuffer, filename);
 
+      expect(process.cwd).toHaveBeenCalled();
+      expect(path.join).toHaveBeenCalledWith(expect.any(String), 'reports');
+      expect(path.join).toHaveBeenCalledWith(expect.any(String), filename);
       expect(fs.ensureDir).toHaveBeenCalledWith('/app/reports');
       expect(fs.writeFile).toHaveBeenCalledWith(mockFilePath, pdfBuffer);
       expect(result).toBe(mockFilePath);
+
+      // Restore mocks
+      cwdSpy.mockRestore();
+      joinSpy.mockRestore();
     });
   });
 });
