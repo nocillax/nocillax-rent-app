@@ -31,7 +31,7 @@ describe('OtherCharge Entity', () => {
     otherCharge.name = 'Repair Fee';
     otherCharge.amount = 100;
     otherCharge.bill_id = 5;
-    
+
     // Don't set nullable fields
     // description is nullable
 
@@ -65,7 +65,7 @@ describe('OtherCharge Entity', () => {
     expect(otherCharge.bill.year).toBe(2023);
     expect(otherCharge.bill_id).toBe(otherCharge.bill.id);
   });
-  
+
   it('should have properties for class definition', () => {
     // Check that the class is defined correctly
     expect(OtherCharge.name).toBe('OtherCharge');

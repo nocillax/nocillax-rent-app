@@ -71,7 +71,7 @@ describe('Payment Entity', () => {
     expect(payment.tenant.name).toBe('John Doe');
     expect(payment.tenant_id).toBe(payment.tenant.id);
   });
-  
+
   it('should have properties for class definition', () => {
     // Check that the class is defined correctly
     expect(Payment.name).toBe('Payment');

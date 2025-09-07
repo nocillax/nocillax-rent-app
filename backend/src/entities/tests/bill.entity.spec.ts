@@ -150,14 +150,14 @@ describe('Bill Entity', () => {
     bill.year = 2023;
     bill.tenant_id = 5;
     bill.apartment_id = 10;
-    
+
     // Don't set due_date which is nullable
 
     // Assert
     expect(bill).toBeDefined();
     expect(bill.due_date).toBeUndefined();
   });
-  
+
   it('should have properties for class definition', () => {
     // Check that the class is defined correctly
     expect(Bill.name).toBe('Bill');

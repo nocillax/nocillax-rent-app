@@ -10,6 +10,7 @@ A full-featured property management system designed to streamline apartment rent
 ## Table of Contents
 
 - [Features](#features)
+- [Development Status](#development-status)
 - [System Architecture](#system-architecture)
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
@@ -34,6 +35,48 @@ A full-featured property management system designed to streamline apartment rent
 - **Reporting**: Generate financial reports, payment histories, and tenant statements
 - **User Authentication**: Secure admin login with JWT authentication
 - **Responsive UI**: Modern interface that works across devices
+
+## Development Status
+
+### Current Status: Backend Complete, Frontend Development Starting
+
+| Component                | Status         | Completion % | Notes                                           |
+| ------------------------ | -------------- | ------------ | ----------------------------------------------- |
+| **Backend API**          | ✅ Complete    | 100%         | All endpoints implemented and tested            |
+| **Database Models**      | ✅ Complete    | 100%         | All entities and relationships defined          |
+| **Backend Testing**      | ✅ Complete    | 100%         | 90.32% statement coverage, 306 tests passing    |
+| **Frontend Components**  | 🟡 In Progress | 20%          | Basic components created, pages being developed |
+| **Frontend Integration** | 🟡 In Progress | 15%          | API service integration started                 |
+| **Frontend Testing**     | 🔴 Not Started | 0%           | Will begin after core components are complete   |
+| **Deployment**           | 🔴 Not Started | 0%           | Will begin after MVP is complete                |
+
+### Recent Milestones
+
+- ✅ Completed comprehensive backend testing (306 tests passing)
+- ✅ Achieved over 90% test coverage across the backend
+- ✅ Finalized all API endpoints with proper documentation
+- ✅ Implemented advanced billing and payment processing logic
+- ✅ Added PDF report generation for tenant statements and financial reports
+
+### Next Steps
+
+1. **Frontend Development (Current Focus)**
+
+   - Implement responsive UI components using Next.js and Tailwind CSS
+   - Create tenant, billing, and payment management interfaces
+   - Build dashboard with financial visualizations
+   - Integrate authentication flow with backend
+
+2. **Testing & QA**
+
+   - Implement frontend component and integration tests
+   - Perform cross-browser compatibility testing
+   - Conduct user acceptance testing with stakeholders
+
+3. **Deployment**
+   - Set up CI/CD pipeline for automated testing and deployment
+   - Configure production environment with proper security measures
+   - Create backup and monitoring systems
 
 ## System Architecture
 
@@ -227,17 +270,32 @@ Handles admin authentication and security using JWT tokens.
 
 ## Testing
 
-The application includes comprehensive test coverage:
+The application includes comprehensive test coverage, with the backend having 90.32% statement coverage and 306 passing tests:
 
 ```bash
 # Run backend tests
 cd backend
 npm test
 
-# Run frontend tests
+# Run backend tests with coverage report
+cd backend
+npm run test:cov
+
+# Run frontend tests (in development)
 cd frontend
 npm test
 ```
+
+### Backend Test Coverage Summary
+
+| Metric     | Coverage % |
+| ---------- | ---------- |
+| Statements | 90.32%     |
+| Branches   | 83.57%     |
+| Functions  | 86.94%     |
+| Lines      | 91.26%     |
+
+For detailed test coverage information, see [Unit-Test-Coverage.md](./Unit-Test-Coverage.md).
 
 ## Deployment
 

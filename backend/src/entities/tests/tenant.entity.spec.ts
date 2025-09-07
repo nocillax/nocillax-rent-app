@@ -54,7 +54,7 @@ describe('Tenant Entity', () => {
     tenant.id = 1;
     tenant.name = 'John Doe';
     tenant.apartment_id = 1;
-    
+
     // Don't set nullable fields
     // phone_number, nid, photo_url, meter_number are all nullable
 
@@ -145,7 +145,7 @@ describe('Tenant Entity', () => {
     expect(tenant.payments[0].tenant_id).toBe(tenant.id);
     expect(tenant.payments[1].tenant_id).toBe(tenant.id);
   });
-  
+
   it('should have properties for class definition', () => {
     // Check that the class is defined correctly
     expect(Tenant.name).toBe('Tenant');

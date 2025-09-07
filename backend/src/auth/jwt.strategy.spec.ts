@@ -33,18 +33,18 @@ describe('JwtStrategy', () => {
         }
         return token;
       };
-      
+
       // Mock request with cookie
       const mockRequest = {
         cookies: {
-          jwt: 'test-token-from-cookie'
-        }
+          jwt: 'test-token-from-cookie',
+        },
       };
-      
+
       const extractedToken = cookieExtractor(mockRequest);
       expect(extractedToken).toBe('test-token-from-cookie');
     });
-    
+
     it('should return null when no token in cookies', () => {
       // Create a custom extractor function similar to the one in the strategy
       const cookieExtractor = (request) => {
@@ -54,48 +54,52 @@ describe('JwtStrategy', () => {
         }
         return token;
       };
-      
+
       // Mock request with no cookies
       const mockRequest = {
-        cookies: {}
+        cookies: {},
       };
-      
+
       const extractedToken = cookieExtractor(mockRequest);
       expect(extractedToken).toBeNull();
     });
 
     it('should extract token from Authorization header as fallback', () => {
       // Mock the ExtractJwt.fromAuthHeaderAsBearerToken method
-      const mockFromAuthHeaderAsBearerToken = jest.fn().mockReturnValue(
-        (request) => request?.headers?.authorization?.split(' ')[1] || null
-      );
-      
+      const mockFromAuthHeaderAsBearerToken = jest
+        .fn()
+        .mockReturnValue(
+          (request) => request?.headers?.authorization?.split(' ')[1] || null,
+        );
+
       // Replace the actual implementation with our mock for this test
-      const originalFromAuthHeaderAsBearerToken = ExtractJwt.fromAuthHeaderAsBearerToken;
+      const originalFromAuthHeaderAsBearerToken =
+        ExtractJwt.fromAuthHeaderAsBearerToken;
       ExtractJwt.fromAuthHeaderAsBearerToken = mockFromAuthHeaderAsBearerToken;
-      
+
       try {
         // Create a new instance with our mocked extractor
         const jwtStrategy = new JwtStrategy();
-        
+
         // Mock a request with an auth header
         const mockRequest = {
           headers: {
-            authorization: 'Bearer test-token-from-header'
-          }
+            authorization: 'Bearer test-token-from-header',
+          },
         };
-        
+
         // We can't directly test jwtStrategy.constructor options due to the way PassportStrategy works,
         // but we can test that our mock was called, which indirectly tests the strategy's configuration
         expect(mockFromAuthHeaderAsBearerToken).toHaveBeenCalled();
-        
+
         // Test the header extractor directly
         const headerExtractor = mockFromAuthHeaderAsBearerToken();
         const extractedToken = headerExtractor(mockRequest);
         expect(extractedToken).toBe('test-token-from-header');
       } finally {
         // Restore the original implementation
-        ExtractJwt.fromAuthHeaderAsBearerToken = originalFromAuthHeaderAsBearerToken;
+        ExtractJwt.fromAuthHeaderAsBearerToken =
+          originalFromAuthHeaderAsBearerToken;
       }
     });
   });
@@ -111,7 +115,7 @@ describe('JwtStrategy', () => {
         username: 'admin',
       });
     });
-    
+
     it('should handle numeric user IDs in payload', async () => {
       const payload = { sub: 42, username: 'test-user' };
 
@@ -122,13 +126,13 @@ describe('JwtStrategy', () => {
         username: 'test-user',
       });
     });
-    
+
     it('should handle additional payload properties', async () => {
-      const payload = { 
-        sub: '123', 
-        username: 'manager', 
+      const payload = {
+        sub: '123',
+        username: 'manager',
         role: 'admin',
-        permissions: ['read', 'write']
+        permissions: ['read', 'write'],
       };
 
       const result = await strategy.validate(payload);
@@ -138,7 +142,7 @@ describe('JwtStrategy', () => {
         userId: '123',
         username: 'manager',
       });
-      
+
       // Should not include extra fields
       expect(result).not.toHaveProperty('role');
       expect(result).not.toHaveProperty('permissions');

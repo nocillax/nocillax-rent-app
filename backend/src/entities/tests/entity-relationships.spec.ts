@@ -246,10 +246,12 @@ describe('Entity Relationships', () => {
     // Test removing bill from tenant and apartment
     const billIndexTenant = tenant.bills.findIndex((b) => b.id === bill.id);
     tenant.bills.splice(billIndexTenant, 1);
-    
-    const billIndexApartment = apartment.bills.findIndex((b) => b.id === bill.id);
+
+    const billIndexApartment = apartment.bills.findIndex(
+      (b) => b.id === bill.id,
+    );
     apartment.bills.splice(billIndexApartment, 1);
-    
+
     expect(tenant.bills).toHaveLength(0);
     expect(apartment.bills).toHaveLength(0);
 
@@ -278,38 +280,46 @@ describe('Entity Relationships', () => {
     otherCharge1.amount = 100;
     otherCharge1.bill = bill;
     otherCharge1.bill_id = bill.id;
-    
+
     const otherCharge2 = new OtherCharge();
     otherCharge2.id = 202;
     otherCharge2.name = 'Late Fee';
     otherCharge2.amount = 50;
     otherCharge2.bill = bill;
     otherCharge2.bill_id = bill.id;
-    
+
     bill.other_charge_items.push(otherCharge1, otherCharge2);
-    
+
     // Update other_charges and total
     bill.other_charges = bill.other_charge_items.reduce(
       (sum, charge) => sum + charge.amount,
       0,
     );
-    bill.total = bill.rent + bill.water_bill + bill.gas_bill + 
-                bill.electricity_bill + bill.other_charges;
-    
+    bill.total =
+      bill.rent +
+      bill.water_bill +
+      bill.gas_bill +
+      bill.electricity_bill +
+      bill.other_charges;
+
     expect(bill.other_charges).toBe(150);
     expect(bill.total).toBe(1310);
-    
+
     // Remove one charge
     bill.other_charge_items.pop(); // Remove the last charge (Late Fee)
-    
+
     // Update other_charges and total again
     bill.other_charges = bill.other_charge_items.reduce(
       (sum, charge) => sum + charge.amount,
       0,
     );
-    bill.total = bill.rent + bill.water_bill + bill.gas_bill + 
-                bill.electricity_bill + bill.other_charges;
-    
+    bill.total =
+      bill.rent +
+      bill.water_bill +
+      bill.gas_bill +
+      bill.electricity_bill +
+      bill.other_charges;
+
     expect(bill.other_charges).toBe(100);
     expect(bill.total).toBe(1260);
   });
