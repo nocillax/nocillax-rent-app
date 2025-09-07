@@ -1,12 +1,27 @@
-// This is the root layout for the Next.js App Router application.
-// The design goal is to create a clean, minimalist, and premium Apple-esque user interface.
-// Use beautiful, professional typography and high-quality icons and images.
-// The entire application must be fully mobile-responsive.
-
-// Implement a dark/light mode toggle. The theme preference should be stored
-// and managed here, affecting the entire application.
-
 import "./globals.css";
+import { Inter, Poppins, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+});
+
+export const metadata = {
+  title: "Nocillax Rent App",
+  description: "A comprehensive rental management application",
+};
 
 export default function RootLayout({
   children,
@@ -14,15 +29,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        {/*
-          Copilot, please generate the main layout structure for this application.
-          It should include a header with a site title and the dark/light mode toggle.
-          The design should be very clean and use Tailwind CSS for all styling.
-          The `children` prop should be rendered within a main content container.
-        */}
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable}`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
