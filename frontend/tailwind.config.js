@@ -125,6 +125,7 @@ module.exports = {
       },
       fontFamily: {
         sans: [
+          "var(--font-inter)",
           "Inter",
           "system-ui",
           "-apple-system",
@@ -136,6 +137,7 @@ module.exports = {
           "sans-serif",
         ],
         display: [
+          "var(--font-poppins)",
           "Poppins",
           "system-ui",
           "-apple-system",
@@ -146,7 +148,7 @@ module.exports = {
           "Arial",
           "sans-serif",
         ],
-        mono: ["JetBrains Mono", "monospace"],
+        mono: ["var(--font-jetbrains-mono)", "JetBrains Mono", "monospace"],
       },
       keyframes: {
         "accordion-down": {

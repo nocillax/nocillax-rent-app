@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: 0 0% 100%;
+  --background: 23 28% 98%; /* Beige-50 equivalent */
   --foreground: 212 28% 26%;
 
-  --card: 0 0% 100%;
+  --card: 23 28% 98%; /* Beige-50 equivalent */
   --card-foreground: 212 28% 26%;
 
-  --popover: 0 0% 100%;
+  --popover: 23 28% 98%; /* Beige-50 equivalent */
   --popover-foreground: 212 28% 26%;
 
   --primary: 212 28% 26%;

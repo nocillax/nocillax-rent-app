@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -16,14 +15,16 @@ import {
   Bath,
   Bed,
   Building,
+  Check,
+  Eye,
   Home,
-  LayoutDashboard,
+  Info,
   MapPin,
+  Plus,
   PlusCircle,
   Search,
-  SquareUser,
-  Tag,
   Users,
+  XCircle,
 } from "lucide-react";
 
 // Define apartment type
@@ -151,7 +152,7 @@ export default function ApartmentsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 bg-beige-50">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div className="px-1">
           <h1 className="text-3xl font-display font-bold text-navy-800">
@@ -161,30 +162,30 @@ export default function ApartmentsPage() {
             Manage your property units
           </p>
         </div>
-        <Button className="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white shadow-sm">
+        <Button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-full h-10 px-4 shadow-subtle font-display font-medium">
           <PlusCircle className="h-4 w-4" />
           Add Apartment
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white p-4 rounded-lg border border-beige-200">
+      <div className="flex flex-wrap items-center gap-4 mb-8 bg-beige-100/80 backdrop-blur-sm p-4 rounded-xl shadow-subtle">
         <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy-600" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-skyblue-600" />
             <Input
               placeholder="Search apartments..."
-              className="pl-9 border-navy-300 focus-visible:ring-teal-700 w-full bg-white font-medium"
+              className="pl-9 border-skyblue-200 focus-visible:ring-teal-600 w-full bg-beige-50 font-display font-medium rounded-lg"
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <select className="h-10 rounded-md border border-navy-300 px-3 py-2 text-sm bg-white text-navy-700 font-medium focus:border-teal-700 min-w-[120px]">
+            <select className="h-10 rounded-lg border-none px-3 py-2 text-sm bg-teal-100 text-teal-700 font-display font-medium focus:ring-1 focus:ring-teal-600 min-w-[120px]">
               <option value="">All Buildings</option>
               <option value="A">Building A</option>
               <option value="B">Building B</option>
               <option value="C">Building C</option>
             </select>
-            <select className="h-10 rounded-md border border-navy-300 px-3 py-2 text-sm bg-white text-navy-700 font-medium focus:border-teal-700 min-w-[120px]">
+            <select className="h-10 rounded-lg border-none px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-skyblue-600 min-w-[120px]">
               <option value="">All Status</option>
               <option value="Occupied">Occupied</option>
               <option value="Vacant">Vacant</option>
@@ -196,99 +197,110 @@ export default function ApartmentsPage() {
       {/* Apartments Grid */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {apartmentsData.apartments.map((apartment) => (
-          <Card
+          <div
             key={apartment.id}
-            className="overflow-hidden cursor-pointer group hover:shadow-md transition-all duration-200 border border-beige-300 hover:border-teal-700 shadow-sm"
+            className="overflow-hidden cursor-pointer group hover:shadow-lg transition-all duration-200 border border-beige-200 rounded-xl shadow-subtle-md bg-beige-50 backdrop-blur-sm"
             onClick={() => openApartmentDetails(apartment)}
           >
-            <div
-              className={`relative py-4 px-4 flex items-center justify-between border-b ${
-                apartment.status === "Vacant"
-                  ? "border-b-emerald-600"
-                  : "border-b-amber-600"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-beige-100 p-2 rounded-md flex items-center justify-center">
-                  <Home className="h-5 w-5 text-navy-700" />
+            <div className="relative px-5 pt-5 pb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="bg-teal-100 p-2 rounded-full">
+                  <Home className="h-4 w-4 text-teal-600" />
                 </div>
                 <div>
                   <div className="text-xl font-display font-bold text-navy-800">
                     {apartment.number}
                   </div>
-                  <div className="text-xs font-medium flex items-center text-navy-600">
-                    <Building className="h-3 w-3 mr-1" />
-                    Building {apartment.building}, Floor {apartment.floor}
+                  <div className="text-xs font-display font-medium flex items-center text-navy-600">
+                    <Building className="h-3 w-3 mr-1 text-teal-600" />
+                    Building {apartment.building}
                   </div>
                 </div>
               </div>
-              <Badge
-                className={getStatusBadgeClass(apartment.status) + " ml-2"}
-              >
-                {apartment.status}
-              </Badge>
+              {apartment.status === "Vacant" ? (
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
+                  <span className="text-xs font-display font-bold text-emerald-600">
+                    Vacant
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-amber-500"></div>
+                  <span className="text-xs font-display font-bold text-amber-600">
+                    Occupied
+                  </span>
+                </div>
+              )}
             </div>
-            <CardContent className="p-4 bg-white">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-1.5">
-                  <Tag className="h-4 w-4 text-navy-700" />
-                  <span className="font-bold text-lg text-navy-800">
+            <div className="p-5 pt-0">
+              <div className="flex justify-between items-center mb-5">
+                <div className="flex items-center">
+                  <span className="font-display font-bold text-xl text-navy-800">
                     ${apartment.rent}
                   </span>
-                  <span className="text-xs font-medium text-navy-600">
-                    /month
+                  <span className="text-xs font-display font-bold text-navy-600 ml-1">
+                    /mo
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-navy-700">
-                    <Bed className="h-4 w-4" />
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-1">
+                    <Bed className="h-4 w-4 text-teal-600" strokeWidth={2} />
+                    <span className="text-sm font-display font-bold text-navy-700">
                       {apartment.bedrooms}
                     </span>
                   </div>
-                  <span className="text-navy-400">|</span>
-                  <div className="flex items-center gap-1 text-navy-700">
-                    <Bath className="h-4 w-4" />
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-1">
+                    <Bath
+                      className="h-4 w-4 text-skyblue-600"
+                      strokeWidth={3}
+                    />
+                    <span className="text-sm font-display font-bold text-navy-700">
                       {apartment.bathrooms}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="py-2">
-                <div className="text-sm font-medium text-navy-600">
-                  {apartment.tenant ? "Current Tenant" : "Available"}
-                </div>
-                <div className="font-display font-semibold text-navy-800">
-                  {apartment.tenant || "No tenant assigned"}
-                </div>
-              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-beige-200">
+                {apartment.tenant ? (
+                  <div className="flex items-center">
+                    <Users
+                      className="h-4 w-4 text-purple-600 mr-2"
+                      strokeWidth={2}
+                    />
+                    <span className="font-display font-bold text-navy-800">
+                      {apartment.tenant}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Users
+                      className="h-4 w-4 text-beige-600 mr-2"
+                      strokeWidth={2}
+                    />
+                    <span className="font-display font-bold text-navy-600">
+                      Available
+                    </span>
+                  </div>
+                )}
 
-              <div className="flex justify-between items-center mt-3 pt-3 border-t border-beige-200">
-                <div className="text-sm font-medium text-navy-600 flex items-center">
-                  <MapPin className="h-3.5 w-3.5 mr-1" />
-                  {apartment.squareFeet} sq ft
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-sm font-medium text-teal-700 border-teal-700 hover:text-white hover:bg-teal-700"
-                >
-                  View details
-                </Button>
+                <Eye
+                  className="h-5 w-5 text-teal-600 hover:text-teal-800 cursor-pointer"
+                  strokeWidth={2}
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Apartment Details Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         {selectedApartment && (
-          <DialogContent className="sm:max-w-[700px] p-0 bg-white shadow-md">
+          <DialogContent className="sm:max-w-[700px] p-0 bg-beige-50 shadow-xl rounded-xl border border-beige-200">
             <div
-              className={`relative py-5 px-6 border-b ${
+              className={`relative py-5 px-6 ${
                 selectedApartment.status === "Vacant"
                   ? "border-b-emerald-600"
                   : "border-b-amber-600"
@@ -310,7 +322,7 @@ export default function ApartmentsPage() {
                     {selectedApartment.status}
                   </Badge>
                 </DialogTitle>
-                <DialogDescription className="text-navy-600 font-medium flex items-center mt-1">
+                <DialogDescription className="text-navy-600 font-display font-medium flex items-center mt-1">
                   <Building className="h-4 w-4 mr-1" />
                   Building {selectedApartment.building}, Floor{" "}
                   {selectedApartment.floor}
@@ -322,16 +334,16 @@ export default function ApartmentsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 flex flex-wrap md:flex-nowrap justify-between items-start gap-6 border-b border-beige-200 pb-6">
                   <div>
-                    <div className="text-sm uppercase tracking-wide font-medium text-navy-500">
+                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
                       Address
                     </div>
-                    <div className="text-lg font-medium text-navy-800 mt-1">
+                    <div className="text-lg font-display font-medium text-navy-800 mt-1">
                       123 Main Street, Apt {selectedApartment.number}
                     </div>
                   </div>
 
                   <div>
-                    <div className="text-sm uppercase tracking-wide font-medium text-navy-500">
+                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
                       Monthly Rent
                     </div>
                     <div className="text-2xl font-display font-bold text-navy-800">
@@ -340,10 +352,10 @@ export default function ApartmentsPage() {
                   </div>
 
                   <div>
-                    <div className="text-sm uppercase tracking-wide font-medium text-navy-500">
+                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
                       Status
                     </div>
-                    <div className="font-medium text-lg">
+                    <div className="font-display font-medium text-lg">
                       {selectedApartment.status === "Vacant" ? (
                         <span className="text-emerald-600">Available</span>
                       ) : (
@@ -364,10 +376,10 @@ export default function ApartmentsPage() {
                         <MapPin className="h-4 w-4 text-navy-700" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-navy-500">
+                        <div className="text-sm font-display font-medium text-navy-500">
                           Size
                         </div>
-                        <div className="font-medium text-navy-700">
+                        <div className="font-display font-medium text-navy-700">
                           {selectedApartment.squareFeet} sq ft
                         </div>
                       </div>
@@ -455,13 +467,13 @@ export default function ApartmentsPage() {
                 <div className="md:col-span-2 flex justify-end gap-3 mt-2">
                   <Button
                     variant="outline"
-                    className="border-teal-700 text-teal-700 hover:bg-teal-700 hover:text-white font-medium"
+                    className="border-teal-700 text-teal-700 hover:bg-teal-700 hover:text-white font-display font-medium"
                   >
                     {selectedApartment.status === "Vacant"
                       ? "Assign Tenant"
                       : "Update"}
                   </Button>
-                  <Button className="bg-teal-700 hover:bg-teal-800 text-white font-medium">
+                  <Button className="bg-teal-700 hover:bg-teal-800 text-white font-display font-medium">
                     {selectedApartment.status === "Vacant"
                       ? "List Apartment"
                       : "Manage Lease"}
