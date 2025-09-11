@@ -70,9 +70,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLElement>) {
       >
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center">
-            <span className="font-display text-lg font-bold">
-              NociRent
-            </span>
+            <span className="font-display text-lg font-bold">NociRent</span>
           </Link>
         </div>
         <nav className="px-3 py-6">
@@ -83,18 +81,22 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLElement>) {
                 href={item.href}
                 className={cn(
                   "group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                  pathname === item.href || pathname?.startsWith(`${item.href}/`)
+                  pathname === item.href ||
+                    pathname?.startsWith(`${item.href}/`)
                     ? "bg-secondary text-primary shadow-sm"
                     : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                 )}
                 onClick={() => setIsMobileNavOpen(false)}
               >
-                <item.icon className={cn(
-                  "mr-3 h-5 w-5 transition-colors",
-                  pathname === item.href || pathname?.startsWith(`${item.href}/`) 
-                    ? "text-primary" 
-                    : "text-muted-foreground group-hover:text-foreground"
-                )} />
+                <item.icon
+                  className={cn(
+                    "mr-3 h-5 w-5 transition-colors",
+                    pathname === item.href ||
+                      pathname?.startsWith(`${item.href}/`)
+                      ? "text-primary"
+                      : "text-muted-foreground group-hover:text-foreground"
+                  )}
+                />
                 <span>{item.title}</span>
               </Link>
             ))}
