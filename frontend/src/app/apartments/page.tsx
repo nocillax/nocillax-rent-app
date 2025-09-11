@@ -19,6 +19,7 @@ import {
   Home,
   Info,
   MapPin,
+  Plus,
   PlusCircle,
   Search,
   Users,
@@ -45,7 +46,7 @@ const apartmentsData: { apartments: Apartment[] } = {
   apartments: [
     {
       id: 1,
-      number: "A101",
+      number: "B1",
       floor: 1,
       building: "A",
       status: "Occupied",
@@ -59,7 +60,7 @@ const apartmentsData: { apartments: Apartment[] } = {
     },
     {
       id: 2,
-      number: "A102",
+      number: "B2",
       floor: 1,
       building: "A",
       status: "Vacant",
@@ -73,7 +74,7 @@ const apartmentsData: { apartments: Apartment[] } = {
     },
     {
       id: 3,
-      number: "B205",
+      number: "C1",
       floor: 2,
       building: "B",
       status: "Occupied",
@@ -87,7 +88,7 @@ const apartmentsData: { apartments: Apartment[] } = {
     },
     {
       id: 4,
-      number: "C310",
+      number: "C2",
       floor: 3,
       building: "C",
       status: "Occupied",
@@ -101,7 +102,7 @@ const apartmentsData: { apartments: Apartment[] } = {
     },
     {
       id: 5,
-      number: "A204",
+      number: "D1",
       floor: 2,
       building: "A",
       status: "Occupied",
@@ -115,7 +116,7 @@ const apartmentsData: { apartments: Apartment[] } = {
     },
     {
       id: 6,
-      number: "B110",
+      number: "D2",
       floor: 1,
       building: "B",
       status: "Occupied",
@@ -159,14 +160,13 @@ export default function ApartmentsPage() {
             Manage your property units
           </p>
         </div>
-        <Button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-full h-10 px-4 shadow-subtle font-display font-medium">
-          <PlusCircle className="h-4 w-4" />
-          Add Apartment
+        <Button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-full h-10 px-3 shadow-subtle font-display font-medium">
+          <Plus className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white/20 border border-white/30 backdrop-blur-md p-5 rounded-2xl shadow-md">
+      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white/20 border-white/30 backdrop-blur-md p-5 rounded-2xl ">
         <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-skyblue-600" />
@@ -176,13 +176,13 @@ export default function ApartmentsPage() {
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <select className="h-10 rounded-lg border-none px-3 py-2 text-sm bg-teal-100 text-teal-700 font-display font-medium focus:ring-1 focus:ring-teal-600 min-w-[120px]">
+            <select className="h-10 rounded-lg border-1 border-white/30 px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-teal-600 min-w-[120px]">
               <option value="">All Buildings</option>
               <option value="A">Building A</option>
               <option value="B">Building B</option>
               <option value="C">Building C</option>
             </select>
-            <select className="h-10 rounded-lg border-none px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-skyblue-600 min-w-[120px]">
+            <select className="h-10 rounded-lg border-1 border-white/30 px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-skyblue-600 min-w-[120px]">
               <option value="">All Status</option>
               <option value="Occupied">Occupied</option>
               <option value="Vacant">Vacant</option>
@@ -192,7 +192,7 @@ export default function ApartmentsPage() {
       </div>
 
       {/* Apartments Grid */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
         {apartmentsData.apartments.map((apartment) => (
           <div
             key={apartment.id}
@@ -204,57 +204,71 @@ export default function ApartmentsPage() {
               }`}
             onClick={() => openApartmentDetails(apartment)}
           >
-            <div className="relative px-5 pt-5 pb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="bg-teal-100 p-2 rounded-full">
-                  <Home className="h-4 w-4 text-teal-600" />
+            {/* Card Header - Status Bar */}
+            <div
+              className={`h-1 w-full ${
+                apartment.status === "Vacant"
+                  ? "bg-emerald-300/50"
+                  : "bg-amber-300/50"
+              }`}
+            ></div>
+
+            {/* Apartment Identifier Section */}
+            <div className="relative px-6 pt-6 pb-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className=" p-2.5 rounded-full shadow-sm">
+                  <Home className="h-5 w-5 text-teal-600" />
                 </div>
                 <div>
-                  <div className="text-xl font-display font-bold text-navy-800">
-                    {apartment.number}
-                  </div>
-                  <div className="text-xs font-display font-medium flex items-center text-navy-600">
-                    <Building className="h-3 w-3 mr-1 text-teal-600" />
-                    Building {apartment.building}
+                  <div className="text-2xl font-display font-bold text-navy-800">
+                    {apartment.building}.{apartment.number}
                   </div>
                 </div>
               </div>
               {apartment.status === "Vacant" ? (
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
-                  <span className="text-xs font-display font-bold text-emerald-600">
-                    Vacant
-                  </span>
-                </div>
+                <Badge className=" text-emerald-700 font-semibold px-3 py-1">
+                  Vacant
+                </Badge>
               ) : (
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                  <span className="text-xs font-display font-bold text-amber-600">
-                    Occupied
-                  </span>
-                </div>
+                <Badge className=" text-amber-700 font-semibold px-3 py-1">
+                  Occupied
+                </Badge>
               )}
             </div>
-            <div className="p-5 pt-0">
-              <div className="flex justify-between items-center mb-5">
-                <div className="flex items-center">
-                  <span className="font-display font-bold text-xl text-navy-800">
-                    ${apartment.rent}
-                  </span>
-                  <span className="text-xs font-display font-bold text-navy-600 ml-1">
-                    /mo
-                  </span>
+
+            {/* Divider */}
+            <div className="border-t border-slate-200/50 mx-6"></div>
+
+            {/* Pricing & Features Section */}
+            <div className="px-6 pt-5 pb-5">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <div className="text-xs uppercase tracking-wide font-display font-medium text-navy-500">
+                    Rent
+                  </div>
+                  <div className="flex items-center mt-1">
+                    <span className="font-display font-bold text-2xl text-navy-800">
+                      ${apartment.rent}
+                    </span>
+                    <span className="text-xs font-display font-bold text-navy-600 ml-1 mt-1">
+                      /mo
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <Bed className="h-4 w-4 text-teal-600" strokeWidth={2} />
+
+                <div className="flex items-center gap-4 py-2 px-4 ">
+                  <div className="flex flex-col items-center">
+                    <Bed
+                      className="h-5 w-5 text-skyblue-600 mb-1"
+                      strokeWidth={2}
+                    />
                     <span className="text-sm font-display font-bold text-navy-700">
                       {apartment.bedrooms}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-col items-center">
                     <Bath
-                      className="h-4 w-4 text-skyblue-600"
+                      className="h-5 w-5 text-skyblue-600 mb-1"
                       strokeWidth={2}
                     />
                     <span className="text-sm font-display font-bold text-navy-700">
@@ -264,33 +278,33 @@ export default function ApartmentsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-beige-200">
+              {/* Tenant & Details Section */}
+              <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-200/50">
                 {apartment.tenant ? (
-                  <div className="flex items-center">
+                  <div className="flex items-center  py-1.5 px-3 rounded-full">
                     <Users
                       className="h-4 w-4 text-purple-600 mr-2"
                       strokeWidth={2}
                     />
-                    <span className="font-display font-bold text-navy-800">
+                    <span className="font-display font-medium text-navy-800">
                       {apartment.tenant}
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center">
+                  <div className="flex items-center  py-1.5 px-3 rounded-full">
                     <Users
                       className="h-4 w-4 text-beige-600 mr-2"
                       strokeWidth={2}
                     />
-                    <span className="font-display font-bold text-navy-600">
+                    <span className="font-display font-medium text-navy-600">
                       Available
                     </span>
                   </div>
                 )}
 
-                <Info
-                  className="h-5 w-5 text-teal-600 hover:text-teal-800 cursor-pointer"
-                  strokeWidth={2}
-                />
+                <button className=" p-2  hover:bg-teal-50 transition-colors">
+                  <Info className="h-5 w-5 text-teal-600" strokeWidth={2} />
+                </button>
               </div>
             </div>
           </div>
@@ -311,18 +325,10 @@ export default function ApartmentsPage() {
               <DialogHeader className="pb-2">
                 <DialogTitle className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="bg-white/60 p-2.5 rounded-full shadow-sm">
-                      <Home className="h-5 w-5 text-teal-600" />
-                    </div>
                     <span className="text-2xl font-display font-bold text-navy-800">
                       Apartment {selectedApartment.number}
                     </span>
                   </div>
-                  <Badge
-                    className={getStatusBadgeClass(selectedApartment.status)}
-                  >
-                    {selectedApartment.status}
-                  </Badge>
                 </DialogTitle>
                 <DialogDescription className="text-navy-600 font-display font-medium flex items-center mt-1">
                   <Building className="h-4 w-4 mr-1" />
@@ -357,7 +363,7 @@ export default function ApartmentsPage() {
                     <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
                       Status
                     </div>
-                    <div className="font-display font-medium text-lg">
+                    <div className="font-display font-medium text-base">
                       {selectedApartment.status === "Vacant" ? (
                         <span className="text-emerald-600">Available</span>
                       ) : (
