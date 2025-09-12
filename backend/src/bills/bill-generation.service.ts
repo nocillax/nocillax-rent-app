@@ -104,36 +104,48 @@ export class BillGenerationService {
         if (previousBalance < 0) previousBalance = 0;
       }
 
-      // Calculate advance payment from previous bill
-      let advancePayment = 0;
+      // Calculate credit balance from previous bill
+      let creditBalance = 0;
       if (previousBill && previousBill.advance_payment > previousBill.total) {
-        advancePayment = previousBill.advance_payment - previousBill.total;
+        creditBalance = previousBill.advance_payment - previousBill.total;
       }
 
-      // Check tenant's advance payment balance
-      if (tenant.advance_payment > 0) {
-        advancePayment += tenant.advance_payment;
+      // Check tenant's credit balance
+      if (tenant.credit_balance > 0) {
+        creditBalance += tenant.credit_balance;
 
-        // Reset tenant's advance payment since we're applying it to this bill
-        await this.tenantsRepository.update(tenant.id, { advance_payment: 0 });
+        // Reset tenant's credit balance since we're applying it to this bill
+        await this.tenantsRepository.update(tenant.id, { credit_balance: 0 });
       }
 
-      // Create new bill using apartment's base rent and tenant's bill preferences
+      // Create new bill using apartment's base rent, standard utility costs, and tenant's bill preferences
       const newBill = this.billsRepository.create({
         tenant_id: tenant.id,
         apartment_id: tenant.apartment_id,
         year,
         month,
         rent: tenant.apartment.base_rent,
-        water_bill: tenant.water_bill_enabled ? 0 : 0, // Default 0, to be filled manually
-        gas_bill: tenant.gas_bill_enabled ? 0 : 0,
-        electricity_bill: tenant.electricity_bill_enabled ? 0 : 0,
-        internet_bill: tenant.internet_bill_enabled ? 0 : 0,
-        service_charge: tenant.service_charge_enabled ? 0 : 0,
-        trash_bill: tenant.trash_bill_enabled ? 0 : 0,
+        water_bill: tenant.water_bill_enabled
+          ? tenant.apartment.standard_water_bill
+          : 0,
+        gas_bill: tenant.gas_bill_enabled
+          ? tenant.apartment.standard_gas_bill
+          : 0,
+        electricity_bill: tenant.electricity_bill_enabled
+          ? tenant.apartment.standard_electricity_bill
+          : 0,
+        internet_bill: tenant.internet_bill_enabled
+          ? tenant.apartment.standard_internet_bill
+          : 0,
+        service_charge: tenant.service_charge_enabled
+          ? tenant.apartment.standard_service_charge
+          : 0,
+        trash_bill: tenant.trash_bill_enabled
+          ? tenant.apartment.standard_trash_bill
+          : 0,
         other_charges: 0,
         previous_balance: previousBalance,
-        advance_payment: advancePayment,
+        advance_payment: creditBalance, // Using the renamed variable
         due_date: dueDate,
         is_paid: false,
       });
@@ -141,14 +153,14 @@ export class BillGenerationService {
       // Calculate total
       newBill.total = this.calculateTotal(newBill);
 
-      // If advance payment covers the total, mark as paid
+      // If credit balance covers the total, mark as paid
       if (newBill.advance_payment >= newBill.total) {
         newBill.is_paid = true;
-        // Store remaining advance payment for next month
-        const remainingAdvance = newBill.advance_payment - newBill.total;
-        if (remainingAdvance > 0) {
+        // Store remaining credit balance for next month
+        const remainingCredit = newBill.advance_payment - newBill.total;
+        if (remainingCredit > 0) {
           await this.tenantsRepository.update(tenant.id, {
-            advance_payment: remainingAdvance,
+            credit_balance: remainingCredit,
           });
         }
       }

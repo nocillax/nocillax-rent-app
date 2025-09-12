@@ -42,6 +42,55 @@ export class Apartment {
   base_rent: number;
 
   @ApiProperty({
+    description: 'Standard water bill amount for this apartment',
+    example: 40.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_water_bill: number;
+
+  @ApiProperty({
+    description: 'Standard electricity bill amount for this apartment',
+    example: 65.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_electricity_bill: number;
+
+  @ApiProperty({
+    description: 'Standard gas bill amount for this apartment',
+    example: 30.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_gas_bill: number;
+
+  @ApiProperty({
+    description: 'Standard internet bill amount for this apartment',
+    example: 45.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_internet_bill: number;
+
+  @ApiProperty({
+    description: 'Standard service charge amount for this apartment',
+    example: 90.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_service_charge: number;
+
+  @ApiProperty({
+    description: 'Standard trash bill amount for this apartment',
+    example: 25.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  standard_trash_bill: number;
+
+  @ApiProperty({
+    description: 'Estimated total monthly rent including standard utilities',
+    example: 1750.0,
+  })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  estimated_total_rent: number;
+
+  @ApiProperty({
     description: 'Whether the apartment is currently active',
     example: true,
   })

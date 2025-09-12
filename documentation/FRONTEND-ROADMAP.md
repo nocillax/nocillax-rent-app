@@ -1,5 +1,11 @@
 # Frontend Development Roadmap
 
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Project Planning
+>
+> **Status**: Current
+
 ## Overview
 
 This document outlines the frontend development roadmap for the Nocillax Rent App. Now that the backend is complete with full API coverage and testing, we're focusing on building a responsive, user-friendly frontend interface using Next.js and Tailwind CSS.

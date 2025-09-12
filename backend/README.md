@@ -102,7 +102,7 @@ The application has excellent test coverage:
 | Functions  | 86.94%     |
 | Lines      | 91.26%     |
 
-For detailed test coverage information, see [Unit-Test-Coverage.md](../Unit-Test-Coverage.md).
+For detailed test coverage information, see [Unit-Test-Coverage.md](../documentation/Unit-Test-Coverage.md).
 
 ## Database Schema
 
@@ -117,12 +117,12 @@ The application uses a PostgreSQL database with the following main entities:
 ## Documentation
 
 - API documentation is available via Swagger at `/api/docs` when running the application
-- See [API-Documentation.md](../API-Documentation.md) for comprehensive API details
-- Business logic is documented in [APPLICATION-FLOW.md](../APPLICATION-FLOW.md)
+- See [API-Documentation.md](../documentation/API-Documentation.md) for comprehensive API details
+- Business logic is documented in [APPLICATION-FLOW.md](../documentation/APPLICATION-FLOW.md)
 
 ## Next Steps
 
-With the backend fully implemented and tested, development is now focused on the frontend. See [FRONTEND-ROADMAP.md](../FRONTEND-ROADMAP.md) for details on the frontend development plan.
+With the backend fully implemented and tested, development is now focused on the frontend. See [FRONTEND-ROADMAP.md](../documentation/FRONTEND-ROADMAP.md) for details on the frontend development plan.
 
 ## License
 

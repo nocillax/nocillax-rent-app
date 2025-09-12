@@ -38,7 +38,7 @@ describe('BillsService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BillsService,
@@ -59,7 +59,9 @@ describe('BillsService', () => {
 
     service = module.get<BillsService>(BillsService);
     billRepository = module.get<Repository<Bill>>(getRepositoryToken(Bill));
-    otherChargeRepository = module.get<Repository<OtherCharge>>(getRepositoryToken(OtherCharge));
+    otherChargeRepository = module.get<Repository<OtherCharge>>(
+      getRepositoryToken(OtherCharge),
+    );
     tenantsService = module.get<TenantsService>(TenantsService);
   });
 
@@ -70,7 +72,7 @@ describe('BillsService', () => {
   // =========================================================================
   // CRUD OPERATIONS TESTS
   // =========================================================================
-  
+
   describe('CRUD Operations', () => {
     describe('findAll', () => {
       it('should return all bills when no parameters are provided', async () => {
@@ -206,7 +208,10 @@ describe('BillsService', () => {
         };
 
         // Mock the tenant service to return a valid tenant
-        mockTenantsService.findOne.mockResolvedValue({ id: 1, name: 'John Doe' });
+        mockTenantsService.findOne.mockResolvedValue({
+          id: 1,
+          name: 'John Doe',
+        });
 
         mockBillRepository.create.mockReturnValue(createdBill);
         mockBillRepository.save.mockResolvedValue(createdBill);
@@ -243,7 +248,9 @@ describe('BillsService', () => {
 
         mockTenantsService.findOne.mockResolvedValue(null);
 
-        await expect(service.create(createBillDto)).rejects.toThrow('Tenant not found');
+        await expect(service.create(createBillDto)).rejects.toThrow(
+          'Tenant not found',
+        );
         expect(mockTenantsService.findOne).toHaveBeenCalledWith(999);
         expect(mockBillRepository.create).not.toHaveBeenCalled();
       });
@@ -294,12 +301,12 @@ describe('BillsService', () => {
           relations: ['tenant', 'other_charge_items'],
         });
         expect(mockBillRepository.update).toHaveBeenCalledWith(
-          id, 
+          id,
           expect.objectContaining({
             water_bill: 60,
             electricity_bill: 120,
-            total: expect.any(Number)
-          })
+            total: expect.any(Number),
+          }),
         );
       });
 
@@ -318,7 +325,9 @@ describe('BillsService', () => {
         mockBillRepository.findOne.mockResolvedValue(existingBill);
         mockTenantsService.findOne.mockResolvedValue(null); // New tenant doesn't exist
 
-        await expect(service.update(id, updateBillDto)).rejects.toThrow('Tenant not found');
+        await expect(service.update(id, updateBillDto)).rejects.toThrow(
+          'Tenant not found',
+        );
         expect(mockTenantsService.findOne).toHaveBeenCalledWith(2);
         expect(mockBillRepository.update).not.toHaveBeenCalled();
       });
@@ -365,7 +374,9 @@ describe('BillsService', () => {
           where: { id },
           relations: ['tenant', 'other_charge_items'],
         });
-        expect(mockBillRepository.update).toHaveBeenCalledWith(id, { is_paid: true });
+        expect(mockBillRepository.update).toHaveBeenCalledWith(id, {
+          is_paid: true,
+        });
       });
 
       it('should return null if bill does not exist', async () => {
@@ -436,8 +447,8 @@ describe('BillsService', () => {
 
         // Setup mocks
         mockBillRepository.findOne
-          .mockResolvedValueOnce(bill)  // First call for checking bill exists
-          .mockResolvedValueOnce(updatedBill);  // Second call after updates
+          .mockResolvedValueOnce(bill) // First call for checking bill exists
+          .mockResolvedValueOnce(updatedBill); // Second call after updates
 
         mockOtherChargeRepository.create.mockReturnValue(savedCharge);
         mockOtherChargeRepository.save.mockResolvedValue(savedCharge);
@@ -462,7 +473,7 @@ describe('BillsService', () => {
         });
         expect(mockBillRepository.update).toHaveBeenCalledWith(
           billId,
-          expect.objectContaining({ other_charges: 100 })
+          expect.objectContaining({ other_charges: 100 }),
         );
       });
 
@@ -499,12 +510,15 @@ describe('BillsService', () => {
 
         // Setup mocks
         mockBillRepository.findOne
-          .mockResolvedValueOnce(bill)  // First call for checking bill exists
-          .mockResolvedValueOnce(updatedBill);  // Second call after updates
+          .mockResolvedValueOnce(bill) // First call for checking bill exists
+          .mockResolvedValueOnce(updatedBill); // Second call after updates
 
         mockOtherChargeRepository.create.mockReturnValue(savedCharge);
         mockOtherChargeRepository.save.mockResolvedValue(savedCharge);
-        mockOtherChargeRepository.find.mockResolvedValue([existingCharge, savedCharge]);
+        mockOtherChargeRepository.find.mockResolvedValue([
+          existingCharge,
+          savedCharge,
+        ]);
         mockBillRepository.update.mockResolvedValue({ affected: 1 });
 
         // Call service
@@ -527,7 +541,9 @@ describe('BillsService', () => {
         };
 
         // Execute and assert
-        await expect(service.addOtherCharge(999, otherChargeDto)).rejects.toThrow('Bill not found');
+        await expect(
+          service.addOtherCharge(999, otherChargeDto),
+        ).rejects.toThrow('Bill not found');
         expect(mockBillRepository.findOne).toHaveBeenCalledWith({
           where: { id: 999 },
           relations: ['tenant', 'other_charge_items'],
@@ -540,8 +556,8 @@ describe('BillsService', () => {
         // Test data
         const billId = 1;
         const chargeId = 5;
-        const bill = { 
-          id: billId, 
+        const bill = {
+          id: billId,
           total: 1300,
           other_charges: 100,
         };
@@ -624,7 +640,7 @@ describe('BillsService', () => {
       const tenant = {
         id: 1,
         name: 'John Doe',
-        advance_payment: 500,
+        credit_balance: 500,
         security_deposit: 2000,
         water_bill_enabled: true,
         gas_bill_enabled: true,
@@ -662,7 +678,7 @@ describe('BillsService', () => {
       expect(result.current_month_bill).toHaveProperty('gas_bill', 30);
       expect(result.current_month_bill).toHaveProperty('electricity_bill', 100);
 
-      // Check the source of the bill - based on the actual behavior which 
+      // Check the source of the bill - based on the actual behavior which
       // might have changed from the original expectations
       expect(result.bill_source).toBeDefined();
 

@@ -7,6 +7,8 @@ import { Bill } from '../entities/bill.entity';
 import { Tenant } from '../entities/tenant.entity';
 import { CreateApartmentDto } from '../dto/apartment/create-apartment.dto';
 import { UpdateApartmentDto } from '../dto/apartment/update-apartment.dto';
+import { UpdateApartmentBillingDto } from '../dto/apartment/update-apartment-billing.dto';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ApartmentsService', () => {
   let service: ApartmentsService;
@@ -311,6 +313,137 @@ describe('ApartmentsService', () => {
 
       expect(result).toBe(false);
       expect(mockApartmentRepository.delete).toHaveBeenCalledWith(apartmentId);
+    });
+  });
+
+  describe('updateBillingStructure', () => {
+    it('should update standard utility costs and estimated total rent', async () => {
+      const apartmentId = 1;
+      const updateBillingDto: UpdateApartmentBillingDto = {
+        standardWaterBill: 45,
+        standardElectricityBill: 70,
+        standardGasBill: 35,
+        standardInternetBill: 50,
+        standardServiceCharge: 95,
+        standardTrashBill: 30,
+      };
+
+      const existingApartment = {
+        id: apartmentId,
+        name: 'Apartment 101',
+        base_rent: 1200,
+        standard_water_bill: 40,
+        standard_electricity_bill: 65,
+        standard_gas_bill: 30,
+        standard_internet_bill: 45,
+        standard_service_charge: 90,
+        standard_trash_bill: 25,
+        estimated_total_rent: 1495, // 1200 + 40 + 65 + 30 + 45 + 90 + 25
+      };
+
+      const updatedApartment = {
+        ...existingApartment,
+        standard_water_bill: 45,
+        standard_electricity_bill: 70,
+        standard_gas_bill: 35,
+        standard_internet_bill: 50,
+        standard_service_charge: 95,
+        standard_trash_bill: 30,
+        estimated_total_rent: 1525, // 1200 + 45 + 70 + 35 + 50 + 95 + 30
+      };
+
+      mockApartmentRepository.findOne.mockResolvedValue(existingApartment);
+      mockApartmentRepository.save.mockResolvedValue(updatedApartment);
+
+      const result = await service.updateBillingStructure(
+        apartmentId,
+        updateBillingDto,
+      );
+
+      expect(result).toEqual(updatedApartment);
+      expect(mockApartmentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: apartmentId },
+      });
+      expect(mockApartmentRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: apartmentId,
+          standard_water_bill: 45,
+          standard_electricity_bill: 70,
+          standard_gas_bill: 35,
+          standard_internet_bill: 50,
+          standard_service_charge: 95,
+          standard_trash_bill: 30,
+          estimated_total_rent: 1525, // Sum of base_rent and all standard utility costs
+        }),
+      );
+    });
+
+    it('should update only the provided standard utility costs', async () => {
+      const apartmentId = 1;
+      const updateBillingDto: UpdateApartmentBillingDto = {
+        standardWaterBill: 50, // Only updating water bill
+      };
+
+      const existingApartment = {
+        id: apartmentId,
+        name: 'Apartment 101',
+        base_rent: 1200,
+        standard_water_bill: 40,
+        standard_electricity_bill: 65,
+        standard_gas_bill: 30,
+        standard_internet_bill: 45,
+        standard_service_charge: 90,
+        standard_trash_bill: 25,
+        estimated_total_rent: 1495, // 1200 + 40 + 65 + 30 + 45 + 90 + 25
+      };
+
+      const updatedApartment = {
+        ...existingApartment,
+        standard_water_bill: 50, // Only water bill updated
+        estimated_total_rent: 1505, // 1200 + 50 + 65 + 30 + 45 + 90 + 25
+      };
+
+      mockApartmentRepository.findOne.mockResolvedValue(existingApartment);
+      mockApartmentRepository.save.mockResolvedValue(updatedApartment);
+
+      const result = await service.updateBillingStructure(
+        apartmentId,
+        updateBillingDto,
+      );
+
+      expect(result).toEqual(updatedApartment);
+      expect(mockApartmentRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: apartmentId,
+          standard_water_bill: 50,
+          standard_electricity_bill: 65, // Unchanged
+          standard_gas_bill: 30, // Unchanged
+          standard_internet_bill: 45, // Unchanged
+          standard_service_charge: 90, // Unchanged
+          standard_trash_bill: 25, // Unchanged
+          estimated_total_rent: 1505, // Updated total
+        }),
+      );
+    });
+
+    it('should throw NotFoundException if apartment does not exist', async () => {
+      const apartmentId = 999;
+      const updateBillingDto: UpdateApartmentBillingDto = {
+        standardWaterBill: 45,
+      };
+
+      mockApartmentRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateBillingStructure(apartmentId, updateBillingDto),
+      ).rejects.toThrow(
+        new NotFoundException(`Apartment with ID ${apartmentId} not found`),
+      );
+
+      expect(mockApartmentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: apartmentId },
+      });
+      expect(mockApartmentRepository.save).not.toHaveBeenCalled();
     });
   });
 });

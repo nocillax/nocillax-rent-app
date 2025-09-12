@@ -4,6 +4,7 @@ import { ApartmentsController } from './apartments.controller';
 import { ApartmentsService } from './apartments.service';
 import { CreateApartmentDto } from '../dto/apartment/create-apartment.dto';
 import { UpdateApartmentDto } from '../dto/apartment/update-apartment.dto';
+import { UpdateApartmentBillingDto } from '../dto/apartment/update-apartment-billing.dto';
 
 describe('ApartmentsController', () => {
   let controller: ApartmentsController;
@@ -17,6 +18,7 @@ describe('ApartmentsController', () => {
     create: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    updateBillingStructure: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -272,7 +274,7 @@ describe('ApartmentsController', () => {
 
       mockApartmentsService.remove.mockResolvedValue(true);
 
-      await controller.remove(apartmentId);
+      await controller.remove(String(apartmentId));
 
       expect(mockApartmentsService.remove).toHaveBeenCalledWith(apartmentId);
     });
@@ -282,10 +284,77 @@ describe('ApartmentsController', () => {
 
       mockApartmentsService.remove.mockResolvedValue(false);
 
-      await expect(controller.remove(apartmentId)).rejects.toThrow(
+      await expect(controller.remove(String(apartmentId))).rejects.toThrow(
         new HttpException('Apartment not found', HttpStatus.NOT_FOUND),
       );
       expect(mockApartmentsService.remove).toHaveBeenCalledWith(apartmentId);
+    });
+  });
+
+  describe('updateBillingStructure', () => {
+    it('should update and return apartment billing structure', async () => {
+      const apartmentId = 1;
+      const updateBillingDto: UpdateApartmentBillingDto = {
+        standardWaterBill: 45,
+        standardElectricityBill: 70,
+        standardGasBill: 35,
+        standardInternetBill: 50,
+        standardServiceCharge: 95,
+        standardTrashBill: 30,
+      };
+
+      const updatedApartment = {
+        id: apartmentId,
+        name: 'Apartment 101',
+        base_rent: 1200,
+        standard_water_bill: 45,
+        standard_electricity_bill: 70,
+        standard_gas_bill: 35,
+        standard_internet_bill: 50,
+        standard_service_charge: 95,
+        standard_trash_bill: 30,
+        estimated_total_rent: 1525,
+      };
+
+      mockApartmentsService.updateBillingStructure.mockResolvedValue(
+        updatedApartment,
+      );
+
+      const result = await controller.updateBillingStructure(
+        String(apartmentId),
+        updateBillingDto,
+      );
+
+      expect(result).toEqual(updatedApartment);
+      expect(mockApartmentsService.updateBillingStructure).toHaveBeenCalledWith(
+        apartmentId,
+        updateBillingDto,
+      );
+    });
+
+    it('should throw HttpException when apartment does not exist', async () => {
+      const apartmentId = 999;
+      const updateBillingDto: UpdateApartmentBillingDto = {
+        standardWaterBill: 45,
+      };
+
+      mockApartmentsService.updateBillingStructure.mockRejectedValue(
+        new HttpException('Apartment not found', HttpStatus.NOT_FOUND),
+      );
+
+      await expect(
+        controller.updateBillingStructure(
+          String(apartmentId),
+          updateBillingDto,
+        ),
+      ).rejects.toThrow(
+        new HttpException('Apartment not found', HttpStatus.NOT_FOUND),
+      );
+
+      expect(mockApartmentsService.updateBillingStructure).toHaveBeenCalledWith(
+        apartmentId,
+        updateBillingDto,
+      );
     });
   });
 });

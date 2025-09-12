@@ -1,5 +1,11 @@
 # Software Design Document (SDD)
 
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Technical Architecture
+>
+> **Status**: Current
+
 ## For Nocillax Rent App
 
 **Version 1.0**

@@ -295,7 +295,19 @@ npm test
 | Functions  | 86.94%     |
 | Lines      | 91.26%     |
 
-For detailed test coverage information, see [Unit-Test-Coverage.md](./Unit-Test-Coverage.md).
+## Documentation
+
+The following documentation is available in the `documentation` folder:
+
+- [API Documentation](./documentation/API-Documentation.md) - Comprehensive API endpoint details
+- [Application Flow](./documentation/APPLICATION-FLOW.md) - Business logic and process flows
+- [Frontend Roadmap](./documentation/FRONTEND-ROADMAP.md) - Frontend development plan and progress
+- [Software Design Document](./documentation/SDD.md) - Technical architecture and design decisions
+- [Software Requirements Specification](./documentation/SRS.md) - Detailed functional and non-functional requirements
+- [Unit Test Coverage](./documentation/Unit-Test-Coverage.md) - Test coverage analysis and reports
+- [Backend Changes Summary](./documentation/BACKEND-CHANGES-SUMMARY.md) - Recent backend architecture changes
+- [Backend Integration Notes](./documentation/BACKEND-INTEGRATION-NOTES.md) - Notes on integrating with the backend
+- [Updated Project Report](./documentation/Updated-Project-Report.md) - Latest project status and progress report
 
 ## Deployment
 

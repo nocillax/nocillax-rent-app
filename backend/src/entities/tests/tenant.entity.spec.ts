@@ -14,7 +14,7 @@ describe('Tenant Entity', () => {
     tenant.photo_url = 'http://example.com/photo.jpg';
     tenant.meter_number = 'M12345';
     tenant.is_active = true;
-    tenant.advance_payment = 500;
+    tenant.credit_balance = 500;
     tenant.security_deposit = 2000;
     tenant.water_bill_enabled = true;
     tenant.gas_bill_enabled = true;
@@ -35,7 +35,7 @@ describe('Tenant Entity', () => {
     expect(tenant.photo_url).toBe('http://example.com/photo.jpg');
     expect(tenant.meter_number).toBe('M12345');
     expect(tenant.is_active).toBe(true);
-    expect(tenant.advance_payment).toBe(500);
+    expect(tenant.credit_balance).toBe(500);
     expect(tenant.security_deposit).toBe(2000);
     expect(tenant.water_bill_enabled).toBe(true);
     expect(tenant.gas_bill_enabled).toBe(true);

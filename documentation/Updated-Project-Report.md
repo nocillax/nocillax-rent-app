@@ -1,5 +1,11 @@
 # Nocillax Rent App – Updated Project Overview
 
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Progress Report
+>
+> **Status**: Current
+
 ## Entity Relationships
 
 ### Apartment

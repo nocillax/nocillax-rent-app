@@ -153,7 +153,7 @@ describe('BillGenerationService', () => {
         internet_bill_enabled: false,
         service_charge_enabled: true,
         trash_bill_enabled: true,
-        advance_payment: 300,
+        credit_balance: 300,
       };
 
       // No existing bill for this month
@@ -178,7 +178,7 @@ describe('BillGenerationService', () => {
         trash_bill: 0,
         other_charges: 0,
         previous_balance: 0,
-        advance_payment: tenant.advance_payment,
+        advance_payment: tenant.credit_balance,
         due_date: new Date('2025-08-30'),
         is_paid: false,
         total: 0, // Will be calculated
@@ -218,9 +218,9 @@ describe('BillGenerationService', () => {
         }),
       );
 
-      // Verify tenant's advance payment was reset
+      // Verify tenant's credit balance was reset
       expect(tenantRepository.update).toHaveBeenCalledWith(tenant.id, {
-        advance_payment: 0,
+        credit_balance: 0,
       });
     });
 
@@ -262,7 +262,7 @@ describe('BillGenerationService', () => {
         internet_bill_enabled: false,
         service_charge_enabled: false,
         trash_bill_enabled: false,
-        advance_payment: 1000, // More than enough to cover the bill
+        credit_balance: 1000, // More than enough to cover the bill
       };
 
       mockBillRepository.findOne.mockResolvedValue(null); // No existing bill
@@ -309,10 +309,10 @@ describe('BillGenerationService', () => {
         new Date('2025-08-10'),
       );
 
-      // Expect the remaining advance payment to be stored for next month
+      // Expect the remaining credit balance to be stored for next month
       expect(tenantRepository.update).toHaveBeenCalledWith(
         tenant.id,
-        { advance_payment: 200 }, // 1000 - 800 = 200
+        { credit_balance: 200 }, // 1000 - 800 = 200
       );
 
       expect(result.is_paid).toBe(true);
@@ -327,7 +327,7 @@ describe('BillGenerationService', () => {
           id: 5,
           base_rent: 1000,
         },
-        advance_payment: 0,
+        credit_balance: 0,
       };
 
       // Clear all previous mocks
@@ -436,7 +436,7 @@ describe('BillGenerationService', () => {
           id: 5,
           base_rent: 1000,
         },
-        advance_payment: 0,
+        credit_balance: 0,
       };
 
       // Clear all previous mocks
@@ -524,7 +524,7 @@ describe('BillGenerationService', () => {
         trash_bill: 20,
         other_charges: 40,
         previous_balance: 200,
-        advance_payment: 300,
+        advance_payment: 300, // This is a bill property, not a tenant property
       };
 
       const total = (service as any).calculateTotal(bill);

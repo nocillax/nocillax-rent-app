@@ -1,4 +1,10 @@
-# Software Requirements Specification (SRS)
+# Software Requirements Specification
+
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Requirements
+>
+> **Status**: Current (SRS)
 
 ## For Nocillax Rent App
 

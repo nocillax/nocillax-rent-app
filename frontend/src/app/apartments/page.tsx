@@ -1,506 +1,440 @@
 "use client";
 
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ApartmentCard } from "@/components/apartments/apartment-card";
+import { ApartmentDetailModal } from "@/components/apartments/apartment-detail-modal";
+import { ApartmentFilters } from "@/components/apartments/apartment-filters";
+import { ApartmentForm } from "@/components/apartments/apartment-form";
+import { TenantAssignForm } from "@/components/apartments/tenant-assign-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Bath,
-  Bed,
-  Building,
-  Eye,
-  Home,
-  Info,
-  MapPin,
-  Plus,
-  PlusCircle,
-  Search,
-  Users,
-} from "lucide-react";
-
-// Define apartment type
-type Apartment = {
-  id: number;
-  number: string;
-  floor: number;
-  building: string;
-  status: "Vacant" | "Occupied";
-  tenant: string | null;
-  rent: number;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  leaseEnd: string | null;
-  maintenanceRequests: number;
-};
-
-// Mock data for apartments
-const apartmentsData: { apartments: Apartment[] } = {
-  apartments: [
-    {
-      id: 1,
-      number: "B1",
-      floor: 1,
-      building: "A",
-      status: "Occupied",
-      tenant: "John Doe",
-      rent: 1200,
-      bedrooms: 2,
-      bathrooms: 1,
-      squareFeet: 850,
-      leaseEnd: "2025-12-31",
-      maintenanceRequests: 0,
-    },
-    {
-      id: 2,
-      number: "B2",
-      floor: 1,
-      building: "A",
-      status: "Vacant",
-      tenant: null,
-      rent: 1100,
-      bedrooms: 1,
-      bathrooms: 1,
-      squareFeet: 650,
-      leaseEnd: null,
-      maintenanceRequests: 0,
-    },
-    {
-      id: 3,
-      number: "C1",
-      floor: 2,
-      building: "B",
-      status: "Occupied",
-      tenant: "Sarah Johnson",
-      rent: 950,
-      bedrooms: 1,
-      bathrooms: 1,
-      squareFeet: 600,
-      leaseEnd: "2026-03-15",
-      maintenanceRequests: 1,
-    },
-    {
-      id: 4,
-      number: "C2",
-      floor: 3,
-      building: "C",
-      status: "Occupied",
-      tenant: "Michael Brown",
-      rent: 1400,
-      bedrooms: 3,
-      bathrooms: 2,
-      squareFeet: 1100,
-      leaseEnd: "2026-01-10",
-      maintenanceRequests: 2,
-    },
-    {
-      id: 5,
-      number: "D1",
-      floor: 2,
-      building: "A",
-      status: "Occupied",
-      tenant: "Lisa Wilson",
-      rent: 1100,
-      bedrooms: 2,
-      bathrooms: 1,
-      squareFeet: 800,
-      leaseEnd: "2025-11-20",
-      maintenanceRequests: 0,
-    },
-    {
-      id: 6,
-      number: "D2",
-      floor: 1,
-      building: "B",
-      status: "Occupied",
-      tenant: "Robert Chen",
-      rent: 1300,
-      bedrooms: 2,
-      bathrooms: 2,
-      squareFeet: 950,
-      leaseEnd: "2026-02-28",
-      maintenanceRequests: 0,
-    },
-  ],
-};
+  Apartment,
+  ApartmentFilters as ApartmentFiltersType,
+  Tenant,
+} from "@/types/apartment";
+import { PlusCircle, AlertCircle } from "lucide-react";
+import { generateMockData } from "@/lib/mock-data";
 
 export default function ApartmentsPage() {
+  const [apartments, setApartments] = useState<Apartment[]>([]);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(
     null
   );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isApartmentFormOpen, setIsApartmentFormOpen] = useState(false);
+  const [isEditApartmentFormOpen, setIsEditApartmentFormOpen] = useState(false);
+  const [isTenantAssignOpen, setIsTenantAssignOpen] = useState(false);
+  const [filters, setFilters] = useState<ApartmentFiltersType>({
+    query: "",
+    status: "all",
+    sortBy: "name",
+    sortOrder: "asc",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate API call with mock data
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // In a real app, this would be an API call
+        const data = generateMockData();
+        setApartments(data.apartments);
+      } catch (error) {
+        console.error("Error fetching apartments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Add custom event listener for assigning tenant
+    const handleAssignTenant = (event: any) => {
+      const { apartment } = event.detail;
+      if (apartment) {
+        openTenantAssignForm(apartment);
+      }
+    };
+
+    window.addEventListener(
+      "assignTenant",
+      handleAssignTenant as EventListener
+    );
+
+    fetchData();
+
+    // Clean up event listener
+    return () => {
+      window.removeEventListener(
+        "assignTenant",
+        handleAssignTenant as EventListener
+      );
+    };
+  }, []);
 
   const openApartmentDetails = (apartment: Apartment) => {
+    // Make sure to set the apartment first, then open the modal
     setSelectedApartment(apartment);
-    setIsDetailOpen(true);
+    setTimeout(() => {
+      setIsDetailOpen(true);
+    }, 10);
   };
 
-  // Function to determine status badge color
-  const getStatusBadgeClass = (status: string) => {
-    return status === "Vacant"
-      ? "bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
-      : "bg-amber-600 text-white hover:bg-amber-700 font-semibold";
+  const openEditApartment = (apartment: Apartment) => {
+    setSelectedApartment(apartment);
+    setIsEditApartmentFormOpen(true);
   };
+
+  const openTenantAssignForm = (apartment: Apartment) => {
+    setSelectedApartment(apartment);
+    setIsTenantAssignOpen(true);
+  };
+
+  const handleFilterChange = (newFilters: ApartmentFiltersType) => {
+    setFilters(newFilters);
+  };
+
+  const handleApartmentSubmit = (apartment: Partial<Apartment>) => {
+    // In a real app, this would make an API call to create/update the apartment
+    console.log("Apartment submitted:", apartment);
+
+    // Calculate the estimated total rent properly
+    const baseRent = apartment.baseRent || 0;
+    const waterBill = apartment.standardWaterBill || 0;
+    const electricityBill = apartment.standardElectricityBill || 0;
+    const gasBill = apartment.standardGasBill || 0;
+    const internetBill = apartment.standardInternetBill || 0;
+    const serviceCharge = apartment.standardServiceCharge || 0;
+    const trashBill = apartment.standardTrashBill || 0;
+
+    // Calculate other charges total if any
+    const otherChargesTotal = apartment.otherCharges
+      ? apartment.otherCharges.reduce(
+          (sum, charge) => sum + (charge.amount || 0),
+          0
+        )
+      : 0;
+
+    // Calculate the estimated total
+    const estimatedTotal =
+      baseRent +
+      waterBill +
+      electricityBill +
+      gasBill +
+      internetBill +
+      serviceCharge +
+      trashBill +
+      otherChargesTotal;
+
+    // Check if we're editing an existing apartment
+    if (selectedApartment && isEditApartmentFormOpen) {
+      // Update existing apartment
+      const updatedApartments = apartments.map((apt) => {
+        if (apt.id === selectedApartment.id) {
+          return {
+            ...apt,
+            name: apartment.name || apt.name,
+            code: apartment.code || apt.code,
+            building: apartment.building || apt.building,
+            floor: apartment.floor || apt.floor,
+            bedrooms: apartment.bedrooms || apt.bedrooms,
+            bathrooms: apartment.bathrooms || apt.bathrooms,
+            squareFeet: apartment.squareFeet || apt.squareFeet,
+            baseRent: baseRent,
+            address: apartment.address || apt.address,
+            estimatedTotalRent: estimatedTotal,
+            standardWaterBill: waterBill,
+            standardElectricityBill: electricityBill,
+            standardGasBill: gasBill,
+            standardInternetBill: internetBill,
+            standardServiceCharge: serviceCharge,
+            standardTrashBill: trashBill,
+            otherCharges: apartment.otherCharges || [],
+            description: apartment.description || apt.description,
+          };
+        }
+        return apt;
+      });
+
+      setApartments(updatedApartments);
+      setIsEditApartmentFormOpen(false);
+      setSelectedApartment(null);
+    } else {
+      // Add new apartment
+      const newApartment: Apartment = {
+        id: Math.floor(Math.random() * 10000),
+        name: apartment.name || "New Apartment",
+        code: apartment.code || `A-${Math.floor(Math.random() * 1000)}`,
+        building: apartment.building || "Main Building",
+        floor: apartment.floor || 1,
+        bedrooms: apartment.bedrooms || 1,
+        bathrooms: apartment.bathrooms || 1,
+        squareFeet: apartment.squareFeet || 0,
+        baseRent: baseRent,
+        isOccupied: false,
+        isActive: true,
+        address: apartment.address || "",
+        estimatedTotalRent: estimatedTotal,
+        bills: [],
+        standardWaterBill: waterBill,
+        standardElectricityBill: electricityBill,
+        standardGasBill: gasBill,
+        standardInternetBill: internetBill,
+        standardServiceCharge: serviceCharge,
+        standardTrashBill: trashBill,
+        otherCharges: apartment.otherCharges || [],
+        description: apartment.description || "",
+      };
+
+      setApartments([...apartments, newApartment]);
+      setIsApartmentFormOpen(false);
+    }
+  };
+
+  const handleTenantAssign = (tenant: Partial<Tenant>) => {
+    // In a real app, this would make an API call to assign the tenant
+    console.log("Tenant assigned:", tenant);
+
+    if (selectedApartment) {
+      // Update the apartment status
+      const updatedApartments = apartments.map((apt) =>
+        apt.id === selectedApartment.id
+          ? { ...apt, isOccupied: true, status: "occupied" }
+          : apt
+      );
+
+      setApartments(updatedApartments);
+      setIsTenantAssignOpen(false);
+    }
+  };
+
+  // Apply filters to apartments
+  const filteredApartments = apartments.filter((apartment) => {
+    // Filter by query
+    if (
+      filters.query &&
+      !apartment.name.toLowerCase().includes(filters.query.toLowerCase()) &&
+      !apartment.code.toLowerCase().includes(filters.query.toLowerCase()) &&
+      !apartment.address.toLowerCase().includes(filters.query.toLowerCase())
+    ) {
+      return false;
+    }
+
+    // Filter by status
+    if (
+      (filters.status === "occupied" && !apartment.isOccupied) ||
+      (filters.status === "vacant" && apartment.isOccupied)
+    ) {
+      return false;
+    }
+
+    // Filter by building
+    if (filters.building && apartment.building !== filters.building) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Sort apartments
+  const sortedApartments = [...filteredApartments].sort((a, b) => {
+    const sortOrder = filters.sortOrder === "asc" ? 1 : -1;
+
+    switch (filters.sortBy) {
+      case "name":
+        return a.name.localeCompare(b.name) * sortOrder;
+      case "rent":
+        return (a.baseRent - b.baseRent) * sortOrder;
+      case "totalRent":
+        return (a.estimatedTotalRent - b.estimatedTotalRent) * sortOrder;
+      default:
+        return 0;
+    }
+  });
+
+  // Get unique buildings for filter dropdown
+  const buildings = Array.from(
+    new Set(apartments.map((apt) => apt.building).filter(Boolean))
+  ) as string[];
 
   return (
-    <div className="container mx-auto py-6 min-h-screen bg-beige-50">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div className="px-1">
-          <h1 className="text-3xl font-display font-bold text-navy-800">
+    <div className="space-y-8 py-8">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-8">
+        <div>
+          <motion.h1
+            className="text-4xl font-display font-bold text-navy-800 mb-2"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             Apartments
-          </h1>
-          <p className="mt-1 text-navy-600 font-medium">
-            Manage your property units
-          </p>
+          </motion.h1>
+          <motion.p
+            className="text-navy-600 text-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            Manage your properties and tenants
+          </motion.p>
         </div>
-        <Button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white rounded-full h-10 px-3 shadow-subtle font-display font-medium">
-          <Plus className="h-4 w-4" />
-        </Button>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          <Button
+            className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-5 text-base"
+            onClick={() => setIsApartmentFormOpen(true)}
+          >
+            <PlusCircle className="h-5 w-5 mr-2" />
+            Add Apartment
+          </Button>
+        </motion.div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-8 bg-white/20 border-white/30 backdrop-blur-md p-5 rounded-2xl ">
-        <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-skyblue-600" />
-            <Input
-              placeholder="Search apartments..."
-              className="pl-9 border-skyblue-200 focus-visible:ring-teal-600 w-full bg-beige-50 font-display font-medium rounded-lg"
-            />
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <select className="h-10 rounded-lg border-1 border-white/30 px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-teal-600 min-w-[120px]">
-              <option value="">All Buildings</option>
-              <option value="A">Building A</option>
-              <option value="B">Building B</option>
-              <option value="C">Building C</option>
-            </select>
-            <select className="h-10 rounded-lg border-1 border-white/30 px-3 py-2 text-sm bg-skyblue-100 text-skyblue-700 font-display font-medium focus:ring-1 focus:ring-skyblue-600 min-w-[120px]">
-              <option value="">All Status</option>
-              <option value="Occupied">Occupied</option>
-              <option value="Vacant">Vacant</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <ApartmentFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          buildings={buildings}
+        />
+      </motion.div>
+
+      {/* Results Counter */}
+      {!isLoading && (
+        <motion.div
+          className="flex items-center justify-between my-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          <p className="text-base text-navy-600">
+            Showing{" "}
+            <span className="font-medium text-navy-800">
+              {sortedApartments.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-medium text-navy-800">
+              {apartments.length}
+            </span>{" "}
+            apartments
+          </p>
+        </motion.div>
+      )}
 
       {/* Apartments Grid */}
-      <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-        {apartmentsData.apartments.map((apartment) => (
-          <div
-            key={apartment.id}
-            className={`overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-200 border border-white/30 rounded-2xl shadow-lg backdrop-blur-md
-              ${
-                apartment.status === "Vacant"
-                  ? "bg-emerald-100/40"
-                  : "bg-amber-100/40"
-              }`}
-            onClick={() => openApartmentDetails(apartment)}
-          >
-            {/* Card Header - Status Bar */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, i) => (
             <div
-              className={`h-1 w-full ${
-                apartment.status === "Vacant"
-                  ? "bg-emerald-300/50"
-                  : "bg-amber-300/50"
-              }`}
+              key={i}
+              className="rounded-xl bg-slate-100 animate-pulse h-[250px]"
             ></div>
-
-            {/* Apartment Identifier Section */}
-            <div className="relative px-6 pt-6 pb-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className=" p-2.5 rounded-full shadow-sm">
-                  <Home className="h-5 w-5 text-teal-600" />
-                </div>
-                <div>
-                  <div className="text-2xl font-display font-bold text-navy-800">
-                    {apartment.building}.{apartment.number}
-                  </div>
-                </div>
-              </div>
-              {apartment.status === "Vacant" ? (
-                <Badge className=" text-emerald-700 font-semibold px-3 py-1">
-                  Vacant
-                </Badge>
-              ) : (
-                <Badge className=" text-amber-700 font-semibold px-3 py-1">
-                  Occupied
-                </Badge>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-slate-200/50 mx-6"></div>
-
-            {/* Pricing & Features Section */}
-            <div className="px-6 pt-5 pb-5">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <div className="text-xs uppercase tracking-wide font-display font-medium text-navy-500">
-                    Rent
-                  </div>
-                  <div className="flex items-center mt-1">
-                    <span className="font-display font-bold text-2xl text-navy-800">
-                      ${apartment.rent}
-                    </span>
-                    <span className="text-xs font-display font-bold text-navy-600 ml-1 mt-1">
-                      /mo
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 py-2 px-4 ">
-                  <div className="flex flex-col items-center">
-                    <Bed
-                      className="h-5 w-5 text-skyblue-600 mb-1"
-                      strokeWidth={2}
-                    />
-                    <span className="text-sm font-display font-bold text-navy-700">
-                      {apartment.bedrooms}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Bath
-                      className="h-5 w-5 text-skyblue-600 mb-1"
-                      strokeWidth={2}
-                    />
-                    <span className="text-sm font-display font-bold text-navy-700">
-                      {apartment.bathrooms}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tenant & Details Section */}
-              <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-200/50">
-                {apartment.tenant ? (
-                  <div className="flex items-center  py-1.5 px-3 rounded-full">
-                    <Users
-                      className="h-4 w-4 text-purple-600 mr-2"
-                      strokeWidth={2}
-                    />
-                    <span className="font-display font-medium text-navy-800">
-                      {apartment.tenant}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center  py-1.5 px-3 rounded-full">
-                    <Users
-                      className="h-4 w-4 text-beige-600 mr-2"
-                      strokeWidth={2}
-                    />
-                    <span className="font-display font-medium text-navy-600">
-                      Available
-                    </span>
-                  </div>
-                )}
-
-                <button className=" p-2  hover:bg-teal-50 transition-colors">
-                  <Info className="h-5 w-5 text-teal-600" strokeWidth={2} />
-                </button>
-              </div>
-            </div>
+          ))}
+        </div>
+      ) : sortedApartments.length > 0 ? (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <AnimatePresence>
+            {sortedApartments.map((apartment) => (
+              <motion.div
+                key={apartment.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ApartmentCard
+                  apartment={apartment}
+                  onClick={openApartmentDetails}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      ) : (
+        <motion.div
+          className="flex flex-col items-center justify-center py-16 bg-beige-50 rounded-xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <div className="bg-white/70 p-4 rounded-full mb-4">
+            <AlertCircle className="h-10 w-10 text-navy-400" />
           </div>
-        ))}
-      </div>
+          <h3 className="font-display font-medium text-navy-700 text-lg mb-1">
+            No apartments found
+          </h3>
+          <p className="text-navy-500 text-center max-w-md mb-6">
+            No apartments match your current filters. Try adjusting your search
+            criteria or add a new apartment.
+          </p>
+          <Button
+            variant="outline"
+            className="border-navy-200"
+            onClick={() =>
+              setFilters({
+                query: "",
+                status: "all",
+                sortBy: "name",
+                sortOrder: "asc",
+              })
+            }
+          >
+            Clear All Filters
+          </Button>
+        </motion.div>
+      )}
 
-      {/* Apartment Details Modal */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        {selectedApartment && (
-          <DialogContent className="sm:max-w-[700px] p-0 bg-white/30 shadow-xl rounded-2xl border border-white/30 backdrop-blur-md">
-            <div
-              className={`relative py-6 px-7 ${
-                selectedApartment.status === "Vacant"
-                  ? "border-b border-white/30 bg-emerald-50/30"
-                  : "border-b border-white/30 bg-amber-50/30"
-              }`}
-            >
-              <DialogHeader className="pb-2">
-                <DialogTitle className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-display font-bold text-navy-800">
-                      Apartment {selectedApartment.number}
-                    </span>
-                  </div>
-                </DialogTitle>
-                <DialogDescription className="text-navy-600 font-display font-medium flex items-center mt-1">
-                  <Building className="h-4 w-4 mr-1" />
-                  Building {selectedApartment.building}, Floor{" "}
-                  {selectedApartment.floor}
-                </DialogDescription>
-              </DialogHeader>
-            </div>
+      {/* Apartment Detail Modal */}
+      <ApartmentDetailModal
+        apartment={selectedApartment}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onEdit={openEditApartment}
+      />
 
-            <div className="p-7">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
-                <div className="md:col-span-2 flex flex-wrap md:flex-nowrap justify-between items-start gap-7 border-b border-white/30 pb-7">
-                  <div>
-                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
-                      Address
-                    </div>
-                    <div className="text-lg font-display font-medium text-navy-800 mt-1">
-                      123 Main Street, Apt {selectedApartment.number}
-                    </div>
-                  </div>
+      {/* Add Apartment Form Modal */}
+      <ApartmentForm
+        isOpen={isApartmentFormOpen}
+        onClose={() => setIsApartmentFormOpen(false)}
+        onSave={handleApartmentSubmit}
+        title="Add New Apartment"
+      />
 
-                  <div>
-                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
-                      Monthly Rent
-                    </div>
-                    <div className="text-2xl font-display font-bold text-navy-800">
-                      ${selectedApartment.rent}
-                    </div>
-                  </div>
+      {/* Edit Apartment Form Modal */}
+      <ApartmentForm
+        isOpen={isEditApartmentFormOpen}
+        onClose={() => {
+          setIsEditApartmentFormOpen(false);
+          setSelectedApartment(null);
+        }}
+        onSave={handleApartmentSubmit}
+        apartment={selectedApartment || undefined}
+        title="Edit Apartment"
+      />
 
-                  <div>
-                    <div className="text-sm uppercase tracking-wide font-display font-medium text-navy-500">
-                      Status
-                    </div>
-                    <div className="font-display font-medium text-base">
-                      {selectedApartment.status === "Vacant" ? (
-                        <span className="text-emerald-600">Available</span>
-                      ) : (
-                        <span className="text-amber-600">Occupied</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-b border-beige-200 pb-6">
-                  <h3 className="font-display font-semibold text-lg text-navy-800 mb-3">
-                    Details
-                  </h3>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <div className="w-9 h-9 rounded-full bg-white/60 shadow-sm flex items-center justify-center mr-3">
-                        <MapPin
-                          className="h-4 w-4 text-teal-600"
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-sm font-display font-medium text-navy-500">
-                          Size
-                        </div>
-                        <div className="font-display font-medium text-navy-700">
-                          {selectedApartment.squareFeet} sq ft
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-9 h-9 rounded-full bg-white/60 shadow-sm flex items-center justify-center mr-3">
-                        <Bed
-                          className="h-4 w-4 text-teal-600"
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-navy-500">
-                          Bedrooms
-                        </div>
-                        <div className="font-medium text-navy-700">
-                          {selectedApartment.bedrooms}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-9 h-9 rounded-full bg-white/60 shadow-sm flex items-center justify-center mr-3">
-                        <Bath
-                          className="h-4 w-4 text-teal-600"
-                          strokeWidth={1.5}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-navy-500">
-                          Bathrooms
-                        </div>
-                        <div className="font-medium text-navy-700">
-                          {selectedApartment.bathrooms}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-b border-beige-200 pb-6">
-                  <h3 className="font-display font-semibold text-lg text-navy-800 mb-3">
-                    Tenant Information
-                  </h3>
-
-                  {selectedApartment.tenant ? (
-                    <div>
-                      <div className="font-display font-semibold text-navy-800 text-lg">
-                        {selectedApartment.tenant}
-                      </div>
-
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-navy-500">
-                            Lease End Date
-                          </span>
-                          <span className="font-medium text-navy-700">
-                            {selectedApartment.leaseEnd
-                              ? new Date(
-                                  selectedApartment.leaseEnd
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-navy-500">
-                            Security Deposit
-                          </span>
-                          <span className="font-medium text-navy-700">
-                            $1,000
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-navy-500">
-                            Advance Payment
-                          </span>
-                          <span className="font-medium text-navy-700">$0</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-navy-600 font-display font-medium bg-white/40 p-5 rounded-xl border border-white/30 shadow-sm backdrop-blur-sm">
-                      No tenant currently assigned to this apartment
-                    </div>
-                  )}
-                </div>
-
-                <div className="md:col-span-2 flex justify-end gap-3 mt-2">
-                  <Button
-                    variant="outline"
-                    className="border-white/40 bg-white/20 backdrop-blur-sm text-teal-700 hover:bg-teal-600/20 font-display font-medium px-5 py-2.5"
-                  >
-                    {selectedApartment.status === "Vacant"
-                      ? "Assign Tenant"
-                      : "Update"}
-                  </Button>
-                  <Button className="bg-teal-600/90 hover:bg-teal-700 text-white font-display font-medium px-5 py-2.5 backdrop-blur-sm">
-                    {selectedApartment.status === "Vacant"
-                      ? "List Apartment"
-                      : "Manage Lease"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        )}
-      </Dialog>
+      {/* Tenant Assignment Form */}
+      {selectedApartment && (
+        <TenantAssignForm
+          isOpen={isTenantAssignOpen}
+          onClose={() => setIsTenantAssignOpen(false)}
+          onSave={handleTenantAssign}
+          apartment={selectedApartment}
+        />
+      )}
     </div>
   );
 }

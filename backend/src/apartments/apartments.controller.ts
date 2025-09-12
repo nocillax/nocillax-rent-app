@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  Patch,
   HttpStatus,
   HttpException,
   UseGuards,
@@ -18,6 +19,7 @@ import { Tenant } from '../entities/tenant.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateApartmentDto } from '../dto/apartment/create-apartment.dto';
 import { UpdateApartmentDto } from '../dto/apartment/update-apartment.dto';
+import { UpdateApartmentBillingDto } from '../dto/apartment/update-apartment-billing.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -158,10 +160,20 @@ export class ApartmentsController {
   @ApiResponse({ status: 200, description: 'Apartment deleted successfully' })
   @ApiResponse({ status: 404, description: 'Apartment not found' })
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    const result = await this.apartmentsService.remove(id);
+  async remove(@Param('id') id: string) {
+    const result = await this.apartmentsService.remove(+id);
     if (!result) {
       throw new HttpException('Apartment not found', HttpStatus.NOT_FOUND);
     }
+    return { success: true, message: 'Apartment deleted successfully' };
+  }
+
+  @Patch(':id/billing-structure')
+  @ApiOperation({ summary: "Update an apartment's standard billing structure" })
+  updateBillingStructure(
+    @Param('id') id: string,
+    @Body() updateBillingDto: UpdateApartmentBillingDto,
+  ) {
+    return this.apartmentsService.updateBillingStructure(+id, updateBillingDto);
   }
 }

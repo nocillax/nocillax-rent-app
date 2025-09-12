@@ -1,4 +1,10 @@
-# Application Flow Documentation
+# Application Flow
+
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Technical Design
+>
+> **Status**: Current Documentation
 
 This document outlines the detailed flow of operations within the Nocillax Rent App, providing concrete examples of data flow and user interactions.
 

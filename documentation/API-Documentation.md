@@ -1,5 +1,11 @@
 # API Documentation
 
+> **Last Updated**: September 12, 2025
+>
+> **Document Type**: Technical Reference
+>
+> **Status**: Current
+
 This document provides a comprehensive guide to the Nocillax Rent App API endpoints, including request/response formats, authentication requirements, and sample payloads.
 
 ## Base URL

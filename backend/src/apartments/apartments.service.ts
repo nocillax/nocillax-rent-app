@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UpdateApartmentBillingDto } from '../dto/apartment/update-apartment-billing.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Apartment } from '../entities/apartment.entity';
@@ -67,5 +68,59 @@ export class ApartmentsService {
       result.affected !== undefined &&
       result.affected > 0
     );
+  }
+
+  async updateBillingStructure(
+    id: number,
+    updateBillingDto: UpdateApartmentBillingDto,
+  ) {
+    // Find the apartment
+    const apartment = await this.apartmentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!apartment) {
+      throw new NotFoundException(`Apartment with ID ${id} not found`);
+    }
+
+    // Update standard utility costs
+    if (updateBillingDto.standardWaterBill !== undefined) {
+      apartment.standard_water_bill = updateBillingDto.standardWaterBill;
+    }
+
+    if (updateBillingDto.standardElectricityBill !== undefined) {
+      apartment.standard_electricity_bill =
+        updateBillingDto.standardElectricityBill;
+    }
+
+    if (updateBillingDto.standardGasBill !== undefined) {
+      apartment.standard_gas_bill = updateBillingDto.standardGasBill;
+    }
+
+    if (updateBillingDto.standardInternetBill !== undefined) {
+      apartment.standard_internet_bill = updateBillingDto.standardInternetBill;
+    }
+
+    if (updateBillingDto.standardServiceCharge !== undefined) {
+      apartment.standard_service_charge =
+        updateBillingDto.standardServiceCharge;
+    }
+
+    if (updateBillingDto.standardTrashBill !== undefined) {
+      apartment.standard_trash_bill = updateBillingDto.standardTrashBill;
+    }
+
+    // Calculate and update estimated_total_rent
+    apartment.estimated_total_rent =
+      apartment.base_rent +
+      apartment.standard_water_bill +
+      apartment.standard_electricity_bill +
+      apartment.standard_gas_bill +
+      apartment.standard_internet_bill +
+      apartment.standard_service_charge +
+      apartment.standard_trash_bill;
+
+    // Save the updated apartment
+    return this.apartmentsRepository.save(apartment);
   }
 }

@@ -65,11 +65,11 @@ export class Tenant {
 
   @ApiProperty({
     description:
-      'Amount of advance payment on account (overpaid amount that carries over to future bills)',
+      'Credit balance on account (overpaid amount that carries over to future bills)',
     example: 500.0,
   })
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  advance_payment: number;
+  credit_balance: number;
 
   @ApiProperty({
     description:

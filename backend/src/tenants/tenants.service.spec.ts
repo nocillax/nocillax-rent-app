@@ -583,7 +583,7 @@ describe('TenantsService', () => {
           security_deposit: 2000,
           estimated_deductions: 300,
           deduction_reason: 'Minor repairs and cleaning',
-          advance_payment: 500,
+          credit_balance: 500,
           outstanding_balance: 2250,
           final_balance_due: 1750,
           potential_refund: 1700, // Adjusted based on actual implementation
@@ -633,7 +633,7 @@ describe('TenantsService', () => {
           security_deposit: 2000,
           estimated_deductions: 200,
           deduction_reason: 'Minor cleaning',
-          advance_payment: 1000,
+          credit_balance: 1000,
           outstanding_balance: 800,
           final_balance_due: 0,
           potential_refund: 2000,
@@ -709,7 +709,7 @@ describe('TenantsService', () => {
           security_deposit: 2000,
           deposit_deductions: 300,
           deduction_reason: 'Minor repairs and cleaning',
-          advance_payment: 500,
+          credit_balance: 500,
           outstanding_balance: 1000,
           final_balance_due: 500, // Adjusted based on actual implementation
           refund_amount: 1700, // Adjusted based on actual implementation
@@ -720,7 +720,7 @@ describe('TenantsService', () => {
         // Verify the tenant was marked as inactive and payments were reset
         expect(mockTenantRepository.update).toHaveBeenCalledWith(tenantId, {
           is_active: false,
-          advance_payment: 0,
+          credit_balance: 0,
           security_deposit: 0,
         });
       });

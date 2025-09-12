@@ -356,10 +356,10 @@ export class BillsService {
     // Calculate the security deposit available
     const securityDeposit = tenant.security_deposit || 0;
 
-    // Calculate advance payment available
-    const advancePayment = tenant.advance_payment || 0;
+    // Calculate credit balance available
+    const advancePayment = tenant.credit_balance || 0;
 
-    // First apply advance payment to outstanding balance
+    // First apply credit balance to outstanding balance
     const remainingAfterAdvance = Math.max(
       0,
       totalOutstanding - advancePayment,
